@@ -25,18 +25,18 @@ def cfg(name, default=None):
 def build_prompt(stage, idea, prior, style):
     style_block = json.dumps(style, indent=2, ensure_ascii=False)
     if stage == "research":
-        return (f"You are researching a blog post for Q Youth NZ.\n"
+        return (f"You are researching a blog post for Q-Youth NZ.\n"
                 f"Topic: {idea['title']}\nNotes: {idea.get('notes') or 'none'}\n\n"
                 f"Produce a research brief: key evidence-based points with named sources, "
                 f"NZ/Te Tau Ihu context, and angles suited to this style guide:\n{style_block}\n"
                 f"Output only the research brief text.")
     if stage == "draft":
-        return (f"Write the blog post for Q Youth NZ.\nTopic: {idea['title']}\n\n"
+        return (f"Write the blog post for Q-Youth NZ.\nTopic: {idea['title']}\n\n"
                 f"Research brief:\n{prior.get('brief', '')}\n\n"
                 f"Follow this style guide exactly:\n{style_block}\n"
                 f"Output only the post body. Paragraphs separated by blank lines. No heading.")
     if stage == "reflect":
-        return (f"Reflect on this Q Youth NZ blog draft against the style guide.\n\n"
+        return (f"Reflect on this Q-Youth NZ blog draft against the style guide.\n\n"
                 f"Draft:\n{prior.get('body', '')}\n\nStyle guide:\n{style_block}\n\n"
                 f'Return JSON only: {{"notes": "<critique>", "revised_body": "<full revised text, or null if no changes needed>"}}')
     raise ValueError(f"Unknown stage: {stage}")

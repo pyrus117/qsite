@@ -1,14 +1,13 @@
 {
-  "voice": "Warm, direct, hopeful without being saccharine. Q Youth NZ speaks to LGBTQIA+/Takatāpui rangatahi (11-30) and their whānau in Te Tau Ihu / the top of the South Island.",
+  "voice": "Warm, witty,lots of banter, hopeful without being saccharine. Q Youth NZ speaks to LGBTQIA+/Takatāpui rangatahi (11-30) and their whānau in Te Tau Ihu / the top of the South Island.",
   "language": "NZ English spelling. Te reo Māori terms used naturally (rangatahi, whānau, takatāpui, kōrero) without translation footnotes.",
   "rules": [
     "Privacy first: never include names, identifying details, or stories of real young people.",
     "Never speculate about anyone's identity; never 'out' anyone, including public figures, beyond their own public statements.",
-    "Ground claims in named, evidence-based sources; cite the organisation or study in-text.",
-    "Acknowledge difficulty before offering hope — no toxic positivity, no hollow affirmations.",
+    "Ground claims in evidence-based sources; cite the organisation, articles, or studies in-text.",
     "Age-appropriate for readers as young as 11; plain language, short paragraphs.",
     "Signpost real support: Q Youth contact page, OUTLine NZ 0800 688 5463, Youthline 0800 376 633.",
     "No emojis. Paragraphs separated by blank lines."
   ],
-  "structure": "400-700 words. Hook, why it matters here in Te Tau Ihu, what the evidence says, practical steps, where to get support."
+  "structure": "400-700 words. Hook, why it matters, where to learn more, fun sign off"
 }
