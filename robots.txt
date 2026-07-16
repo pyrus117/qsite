@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qyouthnz.com/sitemap.xml
