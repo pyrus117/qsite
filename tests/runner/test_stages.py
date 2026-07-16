@@ -1,6 +1,6 @@
 import json, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parents[2] / "runner"))
-from runner import build_prompt, claude_cmd, run_stage, _ensure_greeting
+from runner import build_prompt, claude_cmd, run_stage, _ensure_greeting, _run_image_step
 
 GREETING = "Kia Ora Peers and Queers,"
 
@@ -116,6 +116,32 @@ def test_ensure_greeting_no_double_when_present():
     # must not have the greeting twice
     assert result.count(GREETING) == 1
     assert result.startswith(GREETING)
+
+# ── image pipeline tests ──────────────────────────────────────────
+
+def test_image_step_truncates_long_alt_and_credit(monkeypatch):
+    # credit/alt from web-influenced JSON can exceed varchar(255) → Postgres error
+    long_str = "x" * 300
+    candidate = {"image_url": "https://example.com/img.jpg", "alt": long_str, "credit": long_str}
+    monkeypatch.setattr("runner._find_image", lambda title, body: candidate)
+    monkeypatch.setattr("runner._download_image", lambda url: (b"fake", ".jpg"))
+    monkeypatch.setattr("runner.api", lambda path, payload=None: {"filename": "img.jpg"})
+    result = _run_image_step({"id": 1, "title": "Test"}, "body text")
+    assert len(result["imageAlt"]) == 255
+    assert len(result["imageCredit"]) == 255
+
+
+def test_image_step_file_scheme_fails_soft(monkeypatch):
+    # file:// URL must be rejected without calling urlopen; draft still proceeds
+    candidate = {"image_url": "file:///etc/passwd", "alt": "alt", "credit": "cred"}
+    monkeypatch.setattr("runner._find_image", lambda title, body: candidate)
+    # urlopen must never be reached — if it is, the test fails via side-effect
+    monkeypatch.setattr("runner.urllib.request.urlopen",
+                        lambda *a, **kw: (_ for _ in ()).throw(AssertionError("urlopen called")))
+    result = _run_image_step({"id": 1, "title": "Test"}, "body text")
+    # fail-soft: no image fields, empty dict
+    assert result == {}
+
 
 def test_ensure_greeting_case_insensitive_no_double():
     # backstop is exact-match on start; lowercase variant should get prepended

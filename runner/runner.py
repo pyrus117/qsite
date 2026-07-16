@@ -59,14 +59,18 @@ def _parse_image_candidate(raw: str):
 
 def _download_image(url: str):
     """Download url → (bytes, ext).  Raises ValueError for rejected content."""
+    scheme = urllib.parse.urlparse(url).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise ValueError(f"Disallowed URL scheme '{scheme}' — must be http or https")
     ext = Path(urllib.parse.urlparse(url).path).suffix.lower()
     if ext not in _ALLOWED_EXTS:
         raise ValueError(f"Disallowed extension '{ext}' — must be one of {_ALLOWED_EXTS}")
+    cap = _MAX_BYTES + 1  # read one extra byte so the size check below fires correctly
     req = urllib.request.Request(url, headers={"User-Agent": "Q-Youth-Runner/1.0"})
     with urllib.request.urlopen(req, timeout=30) as resp:
-        data = resp.read()
+        data = resp.read(cap)
     if len(data) > _MAX_BYTES:
-        raise ValueError(f"Image too large ({len(data)//1024}KB > 3MB limit)")
+        raise ValueError(f"Image too large (>{_MAX_BYTES//1024//1024}MB limit)")
     return data, ext
 
 
@@ -107,8 +111,8 @@ def _run_image_step(idea: dict, draft_body: str) -> dict:
         stored_name = result.get("filename", filename)
         return {
             "image": stored_name,
-            "imageAlt": candidate.get("alt", ""),
-            "imageCredit": candidate.get("credit", ""),
+            "imageAlt": candidate.get("alt", "")[:255],
+            "imageCredit": candidate.get("credit", "")[:255],
         }
     except Exception as e:
         # fail-soft: warn loudly but never block the draft stage
