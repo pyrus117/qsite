@@ -8,3 +8,4 @@ public/studio/studio.js
 
 # Local Netlify folder
 .netlify
+deno.lock
