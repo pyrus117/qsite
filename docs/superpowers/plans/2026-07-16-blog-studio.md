@@ -8,6 +8,8 @@
 
 **Tech Stack:** Netlify Functions + Netlify Database (`@netlify/database`, `drizzle-orm@beta`, `drizzle-kit@beta`), `@netlify/identity`, esbuild, vitest, Python 3 stdlib for the runner, pytest.
 
+> **Progress (2026-07-16):** Tasks 1–12 implemented, verified, committed. Task 13 stopped at Step 1: `netlify` CLI is not logged in (needs Nate to run `npx netlify login`), and the Task 2 dashboard steps (repo link, `RUNNER_TOKEN`/`GITHUB_REPO`/`GITHUB_TOKEN` env vars, PAT) are unverified. CLAUDE.md rewrite (Step 5) done. **Do not `git push` until the draft deploy is verified** — if the site is already git-linked, a push production-deploys everything untested. One deviation from plan: `tests/runner/test_stages.py` fake matches "produce a research brief" (not "research brief") because the draft prompt quotes the brief and collided.
+
 ## Global Constraints
 
 - Spec: `docs/superpowers/specs/2026-07-16-blog-studio-design.md`. Read it before starting any task.

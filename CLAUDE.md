@@ -1,47 +1,46 @@
 # Q Youth NZ — Site Project Tracker
 
 ## What This Is
-Static HTML/CSS/JS charity website for Q Youth NZ (qyouthnz.com).
+Charity website for Q Youth NZ (qyouthnz.com) — static HTML/CSS/JS site in `public/`, plus the **Blog Studio**: a login-protected dashboard at `/studio/` (Netlify Functions + Netlify Database) where invited users publish blog posts and Nate runs an AI research→draft→reflect pipeline.
 LGBTQIA+/Takatāpui rangatahi support organisation, Nelson/Tasman, New Zealand.
 
 ## File Inventory
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `index.html` | Homepage (hero, stats, sponsors banner, programmes, about, events, newsletter, contact) |
-| `drop-ins.html` | Kea (11–14, Thu) and Kākāpō (15–18, Tue) drop-in groups |
-| `young-adults.html` | Monthly social group, ages 18–30 |
-| `events.html` | Events listing + Google Calendar embed |
-| `education.html` | School/workplace/community training |
-| `local-directory.html` | Regional LGBTQIA+ organisation directory |
-| `resources.html` | PDFs, videos, external links |
-| `get-involved.html` | Volunteer, board, donate, newsletter |
-| `blog.html` | Blog — posts rendered from site-data.json `blog` array, newest first |
-| `privacy-policy.html` | NZ Privacy Act 2020 compliant |
-| `styles.css` | Full design system (CSS variables, all components) |
-| `icons.svg` | SVG sprite (all icons, no emojis) |
-| `site-data.json` | **Edit this** — sponsors, directory, resources, blog posts |
-| `site-content.js` | Async renderer — reads site-data.json (sponsors marquee, directory, resources incl. embedded videos, blog posts), no edits needed |
-| `editor.py` | Local site editor server — run to launch editor |
-| `editor.html` | Editor UI (split-pane preview + sidebar) |
-| `editor-inject.js` | Injected into the editor preview iframe — click-to-edit, image crop/zoom, serialize-to-save (local tool only, never uploaded) |
-| `image-attribution.js` | Hover-credit tooltip for images with a `data-attribution` attribute; included on all 10 public pages |
-| `images/` | Page images, plus `images/sponsors/` and `images/logos/` |
-| `resources/` | Uploaded resource PDFs (created by the Resources panel's PDF upload) |
-| `launch.vbs` | Windows double-click launcher (no console) |
-| `launch.sh` | Linux/Mac double-click launcher |
-| `robots.txt` | SEO — allows all crawlers |
-| `sitemap.xml` | SEO — all 10 pages |
+| `public/` | **Everything deployed** — the 10 site .html files, `styles.css`, `icons.svg`, `site-data.json`, `site-content.js`, `image-attribution.js`, `robots.txt`, `sitemap.xml`, `images/`, `resources/` |
+| `public/index.html` | Homepage (hero, CTA banner, stats, sponsors banner, programmes, about, events, newsletter, contact) |
+| `public/blog.html` | Blog — posts rendered from site-data.json `blog` array, newest first |
+| `public/site-data.json` | Sponsors, directory, resources, blog posts — rendered at runtime by `site-content.js` |
+| `public/studio/` | Blog Studio SPA (`index.html`, `studio.css`; `studio.js` is a gitignored esbuild artefact) |
+| `studio-src/studio.js` | Studio SPA source — bundled by `npm run build` |
+| `netlify/functions/` | API: `ideas.ts`, `drafts.ts`, `runner.ts`, `publish.ts`, `images.ts` + `_shared/` helpers |
+| `netlify/database/migrations/` | Drizzle migrations — applied automatically at deploy |
+| `db/schema.ts`, `db/index.ts` | Drizzle schema (ideas, drafts, runner_heartbeat) + client |
+| `runner/runner.py` | Local AI runner — polls the studio API, runs claude CLI stages (config in `runner/.env`) |
+| `runner/blog_style_guide.json` | Voice/rules/structure fed into every runner prompt |
+| `netlify.toml` | Build (`npm run build`), publish dir `public`, `/studio/*` noindex headers |
+| `tests/functions/` (vitest), `tests/runner/` (pytest via `.venv/bin/python -m pytest`) | Test suites |
+| `editor.py`, `editor.html`, `editor-inject.js`, `launch.*` | Local site editor (edits files under `public/`) — never deployed |
+| `docs/superpowers/` | Blog Studio spec + implementation plan |
 
 ## Deployment Workflow
 
-1. Make changes using the editor (run `launch.vbs` or `python3 editor.py`)
-2. Click **Save Changes** in the editor
-3. Copy all changed files to GoDaddy via File Manager (cPanel)
-4. Priority files to upload after editing: `site-data.json`, `site-content.js`, `image-attribution.js`, `styles.css`, any `.html` files you changed
-5. Upload new images to `images/`, `images/sponsors/`, or `images/logos/` on GoDaddy
-6. Upload new resource PDFs in the `resources/` folder to GoDaddy
-7. Do **not** upload the editor tooling (`editor.py`, `editor.html`, `editor-inject.js`, `launch.*`) — those are local-only
+Hosting is **Netlify**, git-connected to `pyrus117/qsite` — deployment is a `git push`:
+
+1. Edit content (local editor or by hand) → files change under `public/`
+2. Commit and `git push` — Netlify runs `npm run build`, publishes `public/`, applies any new DB migrations
+3. **A Save in the local editor no longer deploys anything** — changes go live only on push
+4. Blog posts published via the Studio commit `public/site-data.json` straight to GitHub → auto-deploy; no local step
+5. Rollback: Netlify → Deploys → previous deploy → **Publish deploy**
+
+## Blog Studio
+
+- URL: `https://qyouthnz.com/studio/` (noindex; Netlify Identity, invite-only)
+- Roles (server-side enforced): **admin** (Nate — AI pipeline, approve, publish anything) and **editor** (manual posting only)
+- Idea statuses: `pending → researching → drafting → reflecting → ready → approved → published` (+ `failed`); illegal transitions rejected server-side; only humans can approve/publish
+- **The AI stages only run while `runner/runner.py` is running on Nate's PC** (polls with `RUNNER_TOKEN`; heartbeat shows as "Runner: online" in the studio)
+- Env vars in Netlify: `RUNNER_TOKEN`, `GITHUB_REPO`, `GITHUB_TOKEN` (fine-grained PAT, Contents R/W on qsite only)
 
 ## Editor Usage
 
@@ -100,12 +99,12 @@ Run after each significant change:
 python3 -m py_compile editor.py && echo "OK"
 
 # 2. JSON valid
-python3 -c "import json; json.load(open('site-data.json'))" && echo "OK"
+python3 -c "import json; json.load(open('public/site-data.json'))" && echo "OK"
 
 # 3. No nested anchors
 python3 -c "
 import glob, re
-bad = [f for f in glob.glob('*.html') if re.search(r'<a[^>]+><a', open(f).read())]
+bad = [f for f in glob.glob('public/*.html') if re.search(r'<a[^>]+><a', open(f).read())]
 print('NESTED ANCHORS:', bad or 'none')
 "
 
@@ -113,18 +112,23 @@ print('NESTED ANCHORS:', bad or 'none')
 python3 -c "
 import os
 pages = ['index','drop-ins','young-adults','events','education','local-directory','resources','get-involved','privacy-policy','blog']
-missing = [p for p in pages if not os.path.exists(p+'.html')]
+missing = [p for p in pages if not os.path.exists('public/'+p+'.html')]
 print('MISSING:', missing or 'none')
 "
 
-# 5. Start and test server (manual - press Ctrl+C after checking)
+# 5. Function + runner test suites
+npm test
+.venv/bin/python -m pytest tests/runner/
+
+# 6. Start and test server (manual - press Ctrl+C after checking)
 # python3 editor.py
 # Then visit http://localhost:8080/editor
 ```
 
 ## Known Issues / Notes
 
-- GoDaddy hosting is cPanel/traditional (not Website Builder)
+- Hosting moved from GoDaddy to Netlify (git-connected) 2026-07-16 — any GoDaddy/cPanel upload instructions you find elsewhere are obsolete
+- Netlify Identity does **not** work under `netlify dev` — Identity-authed studio behaviour is only testable on a deploy; runner-token endpoints test fine locally (`.env` with `RUNNER_TOKEN=devtoken`)
 - sponsor logo filenames have spaces — handled by encodeURIComponent in site-content.js
 - Google Calendar iframe embed uses calendar ID: e12d0...@group.calendar.google.com
 - BeautifulSoup4 needed for HTML editing: `pip install beautifulsoup4`
