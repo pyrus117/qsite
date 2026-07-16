@@ -27,7 +27,9 @@ def build_prompt(stage, idea, prior, style):
     if stage == "research":
         return (f"You are researching a blog post for Q-Youth NZ.\n"
                 f"Topic: {idea['title']}\nNotes: {idea.get('notes') or 'none'}\n\n"
-                f"Produce a research brief: key evidence-based points with named sources, "
+                f"Use web search to find current, real sources — do not rely on memory. "
+                f"Produce a research brief: key evidence-based points, each with the source's "
+                f"name, URL, and date so claims can be verified, "
                 f"NZ/Te Tau Ihu context, and angles suited to this style guide:\n{style_block}\n"
                 f"Output only the research brief text.")
     if stage == "draft":
@@ -56,15 +58,21 @@ def run_stage(stage, idea, prior, style, claude_call):
     raise ValueError(f"Unknown stage: {stage}")
 
 # ── claude CLI ───────────────────────────────────────────────────
-def claude_call(prompt):
+def claude_cmd(prompt, tools=None):
+    cmd = [cfg("CLAUDE_BIN", "claude"), "-p", prompt, "--output-format", "text"]
+    if tools:
+        joined = ",".join(tools)
+        cmd += ["--tools", joined, "--allowedTools", joined]
+    return cmd
+
+def claude_call(prompt, tools=None):
     if os.environ.get("RUNNER_DRY_RUN"):
         return json.dumps({"notes": "dry run", "revised_body": None}) if "Reflect" in prompt \
             else f"[dry-run output for prompt starting: {prompt[:60]}...]"
-    result = subprocess.run(
-        [cfg("CLAUDE_BIN", "claude"), "-p", prompt, "--output-format", "text"],
+    result = subprocess.run(claude_cmd(prompt, tools),
         capture_output=True, text=True, timeout=600)
     if result.returncode != 0:
-        raise RuntimeError(f"claude CLI failed: {result.stderr[:500]}")
+        raise RuntimeError(f"claude CLI failed: {(result.stderr or result.stdout)[:500]}")
     return result.stdout
 
 # ── API ──────────────────────────────────────────────────────────
@@ -87,7 +95,10 @@ def process(idea):
     prior = {}
     for stage, next_status in STAGE_FLOW:
         print(f"  [{idea['title']}] {stage}…")
-        out = run_stage(stage, idea, prior, STYLE_GUIDE, claude_call)
+        # research gets web access so briefs cite real, current sources
+        call = (lambda p: claude_call(p, tools=["WebSearch", "WebFetch"])) \
+            if stage == "research" else claude_call
+        out = run_stage(stage, idea, prior, STYLE_GUIDE, call)
         prior.update({k: v for k, v in out.items() if v})
         draft = None
         if stage == "research":

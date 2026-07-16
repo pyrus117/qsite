@@ -1,6 +1,6 @@
 import json, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parents[2] / "runner"))
-from runner import build_prompt, run_stage
+from runner import build_prompt, claude_cmd, run_stage
 
 STYLE = {"voice": "warm", "rules": ["no emojis"], "language": "NZ", "structure": "short"}
 IDEA = {"id": 7, "title": "Starting at a new school", "notes": "term 3 intake"}
@@ -38,3 +38,16 @@ def test_unknown_stage_raises():
     import pytest
     with pytest.raises(ValueError):
         run_stage("render", IDEA, {}, STYLE, fake_claude)
+
+def test_claude_cmd_plain_has_no_tools():
+    cmd = claude_cmd("hello")
+    assert "--allowedTools" not in cmd
+    assert "--tools" not in cmd
+
+def test_claude_cmd_with_tools_allows_them():
+    cmd = claude_cmd("hello", tools=["WebSearch", "WebFetch"])
+    assert cmd[cmd.index("--tools") + 1] == "WebSearch,WebFetch"
+    assert cmd[cmd.index("--allowedTools") + 1] == "WebSearch,WebFetch"
+
+def test_research_prompt_asks_for_web_search():
+    assert "web search" in build_prompt("research", IDEA, {}, STYLE).lower()
