@@ -17,24 +17,24 @@
 [[headers]]
   for = "/"
   [headers.values]
-    Link = ["</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
+    Link = ["</styles.css>; rel=preload; as=style", "</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
 
 [[headers]]
   for = "/index.html"
   [headers.values]
-    Link = ["</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
+    Link = ["</styles.css>; rel=preload; as=style", "</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
 
 [[headers]]
   for = "/blog.html"
   [headers.values]
-    Link = ["</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
+    Link = ["</styles.css>; rel=preload; as=style", "</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
 
 [[headers]]
   for = "/resources.html"
   [headers.values]
-    Link = ["</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
+    Link = ["</styles.css>; rel=preload; as=style", "</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
 
 [[headers]]
   for = "/local-directory.html"
   [headers.values]
-    Link = ["</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
+    Link = ["</styles.css>; rel=preload; as=style", "</site-content.js>; rel=preload; as=script", "</site-data.json>; rel=preload; as=fetch; crossorigin"]
