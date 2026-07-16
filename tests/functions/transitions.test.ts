@@ -22,6 +22,8 @@ describe("canTransition", () => {
     ["ready", "published"],      // must be approved first
     ["published", "pending"],    // published is terminal
     ["pending", "approved"],
+    ["researching", "approved"],
+    ["drafting", "published"],
     ["approved", "failed"],
     ["nonsense", "pending"],
   ])("rejects %s → %s", (from, to) => {
