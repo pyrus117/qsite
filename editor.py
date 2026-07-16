@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 PORT = 8080
 DIR  = os.path.dirname(os.path.abspath(__file__))
+SITE = os.path.join(DIR, 'public')
 
 PAGES = [
     {"file": "index.html",          "title": "Home"},
@@ -24,7 +25,9 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p = urlparse(self.path).path
         if p in ('/editor', '/editor/'):
-            self._file('editor.html', 'text/html; charset=utf-8')
+            self._file('editor.html', 'text/html; charset=utf-8', base=DIR)
+        elif p == '/editor-inject.js':
+            self._file('editor-inject.js', 'application/javascript; charset=utf-8', base=DIR)
         elif p == '/api/data':
             self._file('site-data.json', 'application/json')
         elif p == '/api/pages':
@@ -50,8 +53,8 @@ class Handler(SimpleHTTPRequestHandler):
         n = int(self.headers.get('Content-Length', 0))
         return json.loads(self.rfile.read(n))
 
-    def _file(self, name, ctype):
-        path = os.path.join(DIR, name)
+    def _file(self, name, ctype, base=None):
+        path = os.path.join(base or SITE, name)
         try:
             data = open(path, 'rb').read()
             self.send_response(200)
@@ -79,7 +82,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def _save_json(self, filename, data):
         try:
-            path = os.path.join(DIR, filename)
+            path = os.path.join(SITE, filename)
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             self._ok()
@@ -90,7 +93,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             from bs4 import BeautifulSoup
             file_name = os.path.basename(body['file'])   # sanitise path
-            path = os.path.join(DIR, file_name)
+            path = os.path.join(SITE, file_name)
             soup = BeautifulSoup(open(path, encoding='utf-8').read(), 'html.parser')
             el = soup.find(attrs={'data-editable': body['id']})
             if not el:
@@ -109,7 +112,7 @@ class Handler(SimpleHTTPRequestHandler):
     def _save_page(self, body):
         try:
             filename = os.path.basename(body['file'])
-            with open(os.path.join(DIR, filename), 'w', encoding='utf-8') as f:
+            with open(os.path.join(SITE, filename), 'w', encoding='utf-8') as f:
                 f.write(body['html'])
             self._ok()
         except Exception as e:
@@ -124,7 +127,7 @@ class Handler(SimpleHTTPRequestHandler):
             # strip data-URL prefix if present: "data:image/png;base64,..."
             if ',' in raw: raw = raw.split(',', 1)[1]
             data = base64.b64decode(raw)
-            dest_dir = os.path.join(DIR, folder)
+            dest_dir = os.path.join(SITE, folder)
             os.makedirs(dest_dir, exist_ok=True)
             with open(os.path.join(dest_dir, filename), 'wb') as f:
                 f.write(data)
@@ -143,7 +146,7 @@ class Handler(SimpleHTTPRequestHandler):
             super().log_message(fmt, *args)
 
 def main():
-    os.chdir(DIR)
+    os.chdir(SITE)
     # Kill any stale process already holding the port
     try:
         import socket as _s, signal
