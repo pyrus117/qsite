@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Q Youth Blog Studio runner — polls the studio API, does agent stages via claude CLI.
+Run on Nate's PC:  python3 runner/runner.py   (config via runner/.env)"""
+import json, os, subprocess, sys, time, urllib.error, urllib.request
+from pathlib import Path
+
+HERE = Path(__file__).parent
+STYLE_GUIDE = json.loads((HERE / "blog_style_guide.json").read_text(encoding="utf-8"))
+
+def load_env():
+    env_file = HERE / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+def cfg(name, default=None):
+    v = os.environ.get(name, default)
+    if v is None:
+        sys.exit(f"Missing required env var {name} (set it in runner/.env)")
+    return v
+
+# ── prompts ──────────────────────────────────────────────────────
+def build_prompt(stage, idea, prior, style):
+    style_block = json.dumps(style, indent=2, ensure_ascii=False)
+    if stage == "research":
+        return (f"You are researching a blog post for Q Youth NZ.\n"
+                f"Topic: {idea['title']}\nNotes: {idea.get('notes') or 'none'}\n\n"
+                f"Produce a research brief: key evidence-based points with named sources, "
+                f"NZ/Te Tau Ihu context, and angles suited to this style guide:\n{style_block}\n"
+                f"Output only the research brief text.")
+    if stage == "draft":
+        return (f"Write the blog post for Q Youth NZ.\nTopic: {idea['title']}\n\n"
+                f"Research brief:\n{prior.get('brief', '')}\n\n"
+                f"Follow this style guide exactly:\n{style_block}\n"
+                f"Output only the post body. Paragraphs separated by blank lines. No heading.")
+    if stage == "reflect":
+        return (f"Reflect on this Q Youth NZ blog draft against the style guide.\n\n"
+                f"Draft:\n{prior.get('body', '')}\n\nStyle guide:\n{style_block}\n\n"
+                f'Return JSON only: {{"notes": "<critique>", "revised_body": "<full revised text, or null if no changes needed>"}}')
+    raise ValueError(f"Unknown stage: {stage}")
+
+def run_stage(stage, idea, prior, style, claude_call):
+    output = claude_call(build_prompt(stage, idea, prior, style)).strip()
+    if stage == "research":
+        return {"brief": output}
+    if stage == "draft":
+        return {"body": output}
+    if stage == "reflect":
+        try:
+            parsed = json.loads(output)
+            return {"reflectionNotes": parsed.get("notes", ""), "revised_body": parsed.get("revised_body")}
+        except (json.JSONDecodeError, AttributeError):
+            return {"reflectionNotes": output, "revised_body": None}
+    raise ValueError(f"Unknown stage: {stage}")
+
+# ── claude CLI ───────────────────────────────────────────────────
+def claude_call(prompt):
+    if os.environ.get("RUNNER_DRY_RUN"):
+        return json.dumps({"notes": "dry run", "revised_body": None}) if "Reflect" in prompt \
+            else f"[dry-run output for prompt starting: {prompt[:60]}...]"
+    result = subprocess.run(
+        [cfg("CLAUDE_BIN", "claude"), "-p", prompt, "--output-format", "text"],
+        capture_output=True, text=True, timeout=600)
+    if result.returncode != 0:
+        raise RuntimeError(f"claude CLI failed: {result.stderr[:500]}")
+    return result.stdout
+
+# ── API ──────────────────────────────────────────────────────────
+def api(path, payload=None):
+    req = urllib.request.Request(
+        cfg("STUDIO_URL").rstrip("/") + path,
+        data=json.dumps(payload or {}).encode(),
+        headers={"Authorization": f"Bearer {cfg('RUNNER_TOKEN')}",
+                 "Content-Type": "application/json"},
+        method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as res:
+            return json.loads(res.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"API {path} → {e.code}: {e.read().decode()[:300]}")
+
+STAGE_FLOW = [("research", "drafting"), ("draft", "reflecting"), ("reflect", "ready")]
+
+def process(idea):
+    prior = {}
+    for stage, next_status in STAGE_FLOW:
+        print(f"  [{idea['title']}] {stage}…")
+        out = run_stage(stage, idea, prior, STYLE_GUIDE, claude_call)
+        prior.update({k: v for k, v in out.items() if v})
+        draft = None
+        if stage == "research":
+            draft = {"brief": out["brief"]}
+        elif stage == "draft":
+            draft = {"body": out["body"]}
+        elif stage == "reflect":
+            draft = {"reflectionNotes": out["reflectionNotes"]}
+            if out.get("revised_body"):
+                draft["body"] = out["revised_body"]
+        api("/api/runner/update", {"ideaId": idea["id"], "status": next_status, "draft": draft})
+    print(f"  [{idea['title']}] ready for review")
+
+def main():
+    load_env()
+    poll = int(cfg("POLL_SECONDS", "90"))
+    print(f"Runner polling {cfg('STUDIO_URL')} every {poll}s. Ctrl+C to stop.")
+    while True:
+        try:
+            api("/api/runner/heartbeat")
+            claimed = api("/api/runner/claim").get("idea")
+            if claimed:
+                try:
+                    process(claimed)
+                except Exception as e:
+                    print(f"  FAILED: {e}", file=sys.stderr)
+                    api("/api/runner/update",
+                        {"ideaId": claimed["id"], "status": "failed", "error": str(e)[:1000]})
+        except Exception as e:
+            print(f"poll error: {e}", file=sys.stderr)
+        time.sleep(poll)
+
+if __name__ == "__main__":
+    main()

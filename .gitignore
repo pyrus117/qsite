@@ -9,3 +9,4 @@ public/studio/studio.js
 # Local Netlify folder
 .netlify
 deno.lock
+runner/.env
