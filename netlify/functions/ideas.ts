@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../../db";
-import { drafts, ideas } from "../../db/schema";
+import { drafts, ideas, runnerHeartbeat } from "../../db/schema";
 import { hasRole, requireUser, rolesOf } from "./_shared/auth";
 import { json } from "./_shared/http";
 import { canTransition } from "./_shared/transitions";
@@ -15,7 +15,8 @@ export default async (req: Request, context: Context) => {
   try {
     if (req.method === "GET" && id === null) {
       const all = await db.select().from(ideas).orderBy(desc(ideas.createdAt));
-      return json({ ideas: all });
+      const [hb] = await db.select().from(runnerHeartbeat).limit(1);
+      return json({ ideas: all, runnerLastSeen: hb?.lastSeen ?? null });
     }
 
     if (req.method === "GET" && id !== null) {
