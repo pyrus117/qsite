@@ -42,6 +42,8 @@ def test_draft_prompt_contains_banned_patterns_block():
     p = build_prompt("draft", IDEA, {"brief": "b"}, STYLE)
     assert "em-dash" in p.lower() or "em dash" in p.lower()
     assert "TITLE:" in p
+    assert "Here's the thing" in p
+    assert "Fragment-stacking in threes" in p
 
 def test_reflect_stage_parses_new_json_shape():
     out = run_stage("reflect", IDEA, {"body": "text", "title": "Old Title"}, STYLE, fake_claude)
@@ -54,6 +56,12 @@ def test_reflect_stage_survives_non_json_output():
     assert out["reflectionNotes"] == "not json at all"
     assert out.get("revised_title") is None
     assert out.get("revised_body") is None
+
+def test_reflect_stage_missing_revised_body_returns_none():
+    out = run_stage("reflect", IDEA, {"body": "text", "title": "T"}, STYLE,
+                    lambda p: json.dumps({"notes": "x", "revised_title": "t"}))
+    assert out["revised_body"] is None
+    assert out["revised_title"] == "t"
 
 def test_reflect_stage_always_has_revised_body():
     # revised_body must be a string (never null) in the new shape

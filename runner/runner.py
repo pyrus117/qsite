@@ -101,7 +101,7 @@ def claude_cmd(prompt, tools=None):
 def claude_call(prompt, tools=None):
     if os.environ.get("RUNNER_DRY_RUN"):
         if "revised_title" in prompt:  # reflect prompt contains this key name
-            return json.dumps({"notes": "dry run", "revised_title": None, "revised_body": "[dry-run body]"})
+            return json.dumps({"notes": "dry run", "revised_title": "[dry-run title]", "revised_body": "[dry-run body]"})
         return f"[dry-run output for prompt starting: {prompt[:60]}...]"
     result = subprocess.run(claude_cmd(prompt, tools),
         capture_output=True, text=True, timeout=600)
