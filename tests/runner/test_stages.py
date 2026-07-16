@@ -1,6 +1,8 @@
 import json, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parents[2] / "runner"))
-from runner import build_prompt, claude_cmd, run_stage
+from runner import build_prompt, claude_cmd, run_stage, _ensure_greeting
+
+GREETING = "Kia Ora Peers and Queers,"
 
 STYLE = {"voice": "warm", "rules": ["no emojis"], "language": "NZ", "structure": "short"}
 IDEA = {"id": 7, "title": "Starting at a new school", "notes": "term 3 intake"}
@@ -25,7 +27,9 @@ def test_research_stage_returns_brief():
 def test_draft_stage_returns_body_and_title():
     out = run_stage("draft", IDEA, {"brief": "b"}, STYLE, fake_claude)
     assert out["title"] == "A Real Title"
-    assert out["body"].startswith("Draft paragraph one.")
+    # backstop prepends greeting, so actual body text follows after blank line
+    assert GREETING in out["body"]
+    assert "Draft paragraph one." in out["body"]
 
 def test_draft_stage_missing_title_returns_none():
     out = run_stage("draft", IDEA, {"brief": "b"}, STYLE, lambda p: "No title prefix here.\n\nJust body.")
@@ -36,7 +40,9 @@ def test_draft_stage_title_with_extra_whitespace():
     out = run_stage("draft", IDEA, {"brief": "b"}, STYLE,
                     lambda p: "TITLE:  Spaced Title  \n\nBody text.")
     assert out["title"] == "Spaced Title"
-    assert out["body"].strip() == "Body text."
+    # backstop prepends greeting; body text is present after it
+    assert out["body"].startswith(GREETING)
+    assert "Body text." in out["body"]
 
 def test_draft_prompt_contains_banned_patterns_block():
     p = build_prompt("draft", IDEA, {"brief": "b"}, STYLE)
@@ -49,7 +55,9 @@ def test_reflect_stage_parses_new_json_shape():
     out = run_stage("reflect", IDEA, {"body": "text", "title": "Old Title"}, STYLE, fake_claude)
     assert out["reflectionNotes"] == "Looks solid"
     assert out["revised_title"] == "Better Title"
-    assert out["revised_body"] == "Revised text here."
+    # backstop prepends greeting if model didn't include it
+    assert out["revised_body"].startswith(GREETING)
+    assert "Revised text here." in out["revised_body"]
 
 def test_reflect_stage_survives_non_json_output():
     out = run_stage("reflect", IDEA, {"body": "text", "title": "T"}, STYLE, lambda p: "not json at all")
@@ -85,3 +93,43 @@ def test_claude_cmd_with_tools_allows_them():
 
 def test_research_prompt_asks_for_web_search():
     assert "web search" in build_prompt("research", IDEA, {}, STYLE).lower()
+
+# ── greeting tests ────────────────────────────────────────────────
+
+def test_draft_prompt_contains_greeting_instruction():
+    p = build_prompt("draft", IDEA, {"brief": "b"}, STYLE)
+    assert GREETING in p
+
+def test_reflect_prompt_preserves_greeting_verbatim():
+    p = build_prompt("reflect", IDEA, {"body": "text", "title": "T"}, STYLE)
+    assert GREETING in p
+
+def test_ensure_greeting_prepends_when_absent():
+    body = "Some body text."
+    result = _ensure_greeting(body)
+    assert result.startswith(GREETING + "\n\n")
+    assert "Some body text." in result
+
+def test_ensure_greeting_no_double_when_present():
+    body = GREETING + "\n\nAlready has it."
+    result = _ensure_greeting(body)
+    # must not have the greeting twice
+    assert result.count(GREETING) == 1
+    assert result.startswith(GREETING)
+
+def test_ensure_greeting_case_insensitive_no_double():
+    # backstop is exact-match on start; lowercase variant should get prepended
+    body = "kia ora peers and queers,\n\nLowercase."
+    result = _ensure_greeting(body)
+    # the exact greeting is now first (prepended), lowercase version still in body
+    assert result.startswith(GREETING + "\n\n")
+
+def test_draft_stage_applies_greeting_backstop():
+    # fake_claude returns body without the greeting — backstop must add it
+    out = run_stage("draft", IDEA, {"brief": "b"}, STYLE, fake_claude)
+    assert out["body"].startswith(GREETING + "\n\n")
+
+def test_reflect_stage_applies_greeting_backstop():
+    # reflect fake returns revised_body without greeting — backstop must add it
+    out = run_stage("reflect", IDEA, {"body": "text", "title": "T"}, STYLE, fake_claude)
+    assert out["revised_body"].startswith(GREETING + "\n\n")

@@ -1,5 +1,6 @@
 export interface BlogPost {
   title: string; date: string; body: string;
+  author?: string;
   image?: string; imageAlt?: string; link?: string; linkLabel?: string;
 }
 
@@ -15,6 +16,7 @@ export function mergePost(siteDataJson: string, post: BlogPost): string {
   }
 
   const clean: BlogPost = { title: post.title.trim(), date: post.date, body: post.body };
+  if (post.author?.trim()) clean.author = post.author.trim();
   for (const key of ["image", "imageAlt", "link", "linkLabel"] as const) {
     if (post[key]?.trim()) clean[key] = post[key]!.trim();
   }

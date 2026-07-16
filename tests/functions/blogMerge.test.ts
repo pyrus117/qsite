@@ -36,4 +36,12 @@ describe("mergePost", () => {
     expect(() => mergePost(fixture, { title: "", date: "2026-07-20", body: "x" })).toThrow();
     expect(() => mergePost(fixture, { title: "t", date: "20-07-2026", body: "x" })).toThrow(/date/i);
   });
+  it("passes author through when provided", () => {
+    const out = JSON.parse(mergePost(fixture, { ...post, author: "Nate" }));
+    expect(out.blog[0].author).toBe("Nate");
+  });
+  it("omits author when not provided", () => {
+    const out = JSON.parse(mergePost(fixture, post));
+    expect(out.blog[0]).not.toHaveProperty("author");
+  });
 });

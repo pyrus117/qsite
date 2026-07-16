@@ -311,6 +311,14 @@
           body.appendChild(time);
         }
 
+        // byline only for runner posts (author field set by publish.ts)
+        if (post.author) {
+          var byline = document.createElement('span');
+          byline.className = 'blog-post-author';
+          byline.textContent = 'by ' + post.author;
+          body.appendChild(byline);
+        }
+
         var h3 = document.createElement('h3');
         h3.textContent = post.title;
         body.appendChild(h3);

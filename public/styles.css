@@ -1452,6 +1452,14 @@ img[data-attribution] { cursor: help; }
   margin-bottom: 0.6rem;
 }
 
+/* muted byline shown only on runner-written posts */
+.blog-post-author {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.6rem;
+}
+
 .blog-post-body h3 { font-size: 1.4rem; margin-bottom: 0.6rem; }
 .blog-post-body p  { color: var(--color-text-muted); margin-bottom: 0.9rem; }
 .blog-post-body .btn { margin-top: 0.25rem; }

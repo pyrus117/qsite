@@ -1032,7 +1032,9 @@ function saveModal(){
     renderResources();
   } else if(mAction==='add-b'||mAction==='ed-b'){
     const t=g('f-btitle'); if(!t){alert('Title required');return;}
-    const obj={title:t,date:g('f-bdate'),body:document.getElementById('f-bbody').value.trim(),
+    // spread original first so keys unknown to this form (author, future fields) survive edits
+    const base=mAction==='ed-b'?{...D.blog[mCtx]}:{};
+    const obj={...base,title:t,date:g('f-bdate'),body:document.getElementById('f-bbody').value.trim(),
                image:g('f-bimage'),imageAlt:g('f-balt'),link:g('f-blink'),linkLabel:g('f-blinklabel')};
     mAction==='add-b'?D.blog.push(obj):D.blog[mCtx]=obj;
     renderBlogPanel();

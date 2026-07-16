@@ -21,6 +21,14 @@ def cfg(name, default=None):
         sys.exit(f"Missing required env var {name} (set it in runner/.env)")
     return v
 
+GREETING = "Kia Ora Peers and Queers,"
+
+def _ensure_greeting(body):
+    # deterministic backstop: prepend greeting if exact line isn't already first
+    if body.startswith(GREETING):
+        return body
+    return GREETING + "\n\n" + body
+
 # ── prompts ──────────────────────────────────────────────────────
 def build_prompt(stage, idea, prior, style):
     style_block = json.dumps(style, indent=2, ensure_ascii=False)
@@ -50,7 +58,8 @@ def build_prompt(stage, idea, prior, style):
                 f"Follow this style guide exactly:\n{style_block}\n\n"
                 f"{banned}\n\n"
                 f"First line must be: TITLE: <your generated title based on content — not the topic prompt>\n"
-                f"Then a blank line, then the post body. Paragraphs separated by blank lines. No heading.")
+                f"Then a blank line, then the post body. The first line of the body must be exactly: {GREETING}\n"
+                f"Then a blank line, then the rest of the post. Paragraphs separated by blank lines. No heading.")
     if stage == "reflect":
         return (f"You are a humanising line-editor for Q-Youth NZ blog posts.\n\n"
                 f"Draft title: {prior.get('title', '')}\n"
@@ -60,6 +69,7 @@ def build_prompt(stage, idea, prior, style):
                 f"\"It's not X it's Y\" reversals, standalone affirmation one-liners, tidy metaphor-callback endings, "
                 f"em-dash overload (max 2 total), ending paragraphs on tidy punchlines, anything else that smells generated.\n\n"
                 f"Always produce a full rewritten body — never return the draft unchanged.\n"
+                f"The revised_body must begin with exactly: {GREETING} (then a blank line). Preserve this verbatim.\n"
                 f"If the title is clunky, improve it.\n\n"
                 f'Return JSON only: {{"notes": "<what you changed and why>", "revised_title": "<improved or same title>", "revised_body": "<full rewritten text>"}}')
     raise ValueError(f"Unknown stage: {stage}")
@@ -77,14 +87,16 @@ def run_stage(stage, idea, prior, style, claude_call):
             body = "\n".join(lines[1:]).lstrip("\n")
         else:
             body = output
-        return {"title": title, "body": body}
+        return {"title": title, "body": _ensure_greeting(body)}
     if stage == "reflect":
         try:
             parsed = json.loads(output)
+            rb = parsed.get("revised_body")
             return {
                 "reflectionNotes": parsed.get("notes", ""),
                 "revised_title": parsed.get("revised_title"),
-                "revised_body": parsed.get("revised_body"),
+                # backstop: guarantee greeting even if model dropped it
+                "revised_body": _ensure_greeting(rb) if rb else None,
             }
         except (json.JSONDecodeError, AttributeError):
             return {"reflectionNotes": output, "revised_title": None, "revised_body": None}

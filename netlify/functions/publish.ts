@@ -35,6 +35,8 @@ export default async (req: Request, context: Context) => {
     const file = await getFile("public/site-data.json");
     const merged = mergePost(file.content, {
       title: draft.title, date: postDate, body: draft.body,
+      // runner posts are always authored by Nate (admin-only publish enforced above)
+      author: idea.source === "agent" ? "Nate" : undefined,
       image: draft.image ?? undefined, imageAlt: draft.imageAlt ?? undefined,
       link: draft.link ?? undefined, linkLabel: draft.linkLabel ?? undefined,
     });
