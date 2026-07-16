@@ -3,6 +3,10 @@
 **Date:** 2026-07-16
 **Status:** Approved by Nate
 
+
+> **Requirement from Nate (2026-07-16, incorporated below):** users other than Nate can
+> log in and update the blog manually. Only Nate can use the AI agent pipeline.
+
 ## Purpose
 
 A hosted dashboard for researching, drafting, reviewing, and publishing posts to the
@@ -30,6 +34,7 @@ server. Accessible from anywhere at an unlisted, login-protected path.
 | Hosting | Existing Netlify site, git-connected deploys |
 | Queue storage | **Netlify Database (Postgres)** — chosen over git-as-database for snappier UI and cleaner concurrent access |
 | Auth | Netlify Identity (`@netlify/identity`, NOT the deprecated widget), invite-only signups — Nate + a few trusted others |
+| Roles | `admin` (Nate): full AI pipeline + manual posting. `editor` (everyone else): manual posting only. Enforced server-side via the Identity JWT roles claim, not just hidden in the UI |
 | Publish safety | Human must click Approve & Publish; agents can never publish |
 
 ## Architecture
@@ -61,7 +66,8 @@ Nate's PC                          Netlify                         GitHub
 
 ### 2. Data model (Netlify DB, Drizzle ORM)
 
-- `ideas`: id, title, notes, status, error, created_at, updated_at
+- `ideas`: id, title, notes, source (`agent` | `manual`), status, error, created_at,
+  updated_at — manual posts skip the agent stages and are created at `ready`
 - `drafts`: id, idea_id, version, brief, title, body, reflection_notes,
   image_refs, created_at
 - Every agent revision inserts a new `drafts` version row — full history, rollback.
@@ -75,6 +81,9 @@ published`, plus `failed` (error message stored and shown, never silent).
 - Auth: dashboard requests require a valid Netlify Identity JWT; the runner
   authenticates with a shared-secret bearer token (env var on both sides).
   Unauthenticated requests are rejected — no public endpoints.
+- Role enforcement (server-side, per endpoint): AI-pipeline endpoints (agent idea
+  intake, stage transitions, runner claiming) require the `admin` role; manual
+  draft/publish endpoints accept `admin` or `editor`.
 - Job claiming: runner atomically claims one `pending`/stage-ready job (status
   transition guards against double-claiming).
 - `publish` function: takes an approved draft, prepends the post to the `blog`
@@ -100,10 +109,15 @@ published`, plus `failed` (error message stored and shown, never silent).
 
 - Static JS app (no framework requirement beyond what the implementation plan picks;
   keep it light — the public site is plain HTML/JS).
-- Queue board with status colours/progress (visual kin of the Streamlit dashboard).
-- Idea intake form; brief viewer; draft editor (hand-edit body/title before
-  approving); reflection notes; version history; **Approve & Publish** button;
-  "runner last seen" indicator (runner heartbeats via the API).
+- Two faces by role, driven by the Identity JWT:
+  - **Everyone (`editor` + `admin`):** "New post" composer — title, date, body,
+    optional image + alt text, optional link (the `site-data.json` blog post shape) —
+    with save-draft and **Publish** buttons.
+  - **Nate only (`admin`):** the AI pipeline — queue board with status
+    colours/progress (visual kin of the Streamlit dashboard), idea intake form,
+    brief viewer, draft editor (hand-edit before approving), reflection notes,
+    version history, **Approve & Publish**, and a "runner last seen" indicator
+    (runner heartbeats via the API).
 
 ## Error handling
 
@@ -114,7 +128,8 @@ published`, plus `failed` (error message stored and shown, never silent).
 
 ## Testing
 
-- Unit tests for functions: auth rejection (no JWT, bad runner token), legal/illegal
+- Unit tests for functions: auth rejection (no JWT, bad runner token), role
+  enforcement (`editor` blocked from AI-pipeline endpoints), legal/illegal
   state transitions, double-claim prevention, publish merge logic.
 - Publish merge tested against a fixture copy of `site-data.json`.
 - Runner tested in dry-run mode end-to-end through all stages.
