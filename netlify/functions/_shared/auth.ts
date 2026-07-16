@@ -4,7 +4,8 @@ import { json } from "./http";
 
 export function rolesOf(user: unknown): string[] {
   const u = user as Record<string, any> | null;
-  return u?.appMetadata?.roles ?? u?.app_metadata?.roles ?? [];
+  const roles = u?.appMetadata?.roles ?? u?.app_metadata?.roles;
+  return Array.isArray(roles) ? roles : [];
 }
 
 export function hasRole(userRoles: string[], allowed: string[]): boolean {
@@ -21,7 +22,8 @@ export async function requireUser(allowed: string[]): Promise<{ user: any } | Re
 export function requireRunner(req: Request): Response | null {
   const expected = process.env.RUNNER_TOKEN;
   const provided = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  // fail closed if the env var is missing; length check prevents timingSafeEqual throwing
+  // fail closed if env var missing; length check prevents timingSafeEqual throwing
+  // (leaks token length to a timing oracle — acceptable for a 64-char random token)
   if (!expected || provided.length !== expected.length) return json({ error: "Runner not authorised" }, 401);
   if (!timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
     return json({ error: "Runner not authorised" }, 401);

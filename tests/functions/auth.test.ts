@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { rolesOf, hasRole, requireRunner } from "../../netlify/functions/_shared/auth";
 
 describe("rolesOf", () => {
@@ -11,6 +11,10 @@ describe("rolesOf", () => {
   it("returns [] for missing metadata or null user", () => {
     expect(rolesOf({})).toEqual([]);
     expect(rolesOf(null)).toEqual([]);
+  });
+  it("returns [] when roles is not an array (malformed metadata)", () => {
+    expect(rolesOf({ appMetadata: { roles: "administrator" } })).toEqual([]);
+    expect(rolesOf({ app_metadata: { roles: null } })).toEqual([]);
   });
 });
 
@@ -26,6 +30,7 @@ describe("hasRole", () => {
 
 describe("requireRunner", () => {
   beforeEach(() => { process.env.RUNNER_TOKEN = "s3cret-token-value"; });
+  afterEach(() => { delete process.env.RUNNER_TOKEN; });
   const req = (auth?: string) =>
     new Request("http://x/api/runner/claim", { headers: auth ? { authorization: auth } : {} });
 
