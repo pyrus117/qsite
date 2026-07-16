@@ -129,6 +129,7 @@ npm test
 
 - Hosting moved from GoDaddy to Netlify (git-connected) 2026-07-16 — any GoDaddy/cPanel upload instructions you find elsewhere are obsolete
 - Netlify Identity does **not** work under `netlify dev` — Identity-authed studio behaviour is only testable on a deploy; runner-token endpoints test fine locally (`.env` with `RUNNER_TOKEN=devtoken`)
+- **CLI draft deploys (`netlify deploy`) cannot reach the database** — Netlify only injects `NETLIFY_DB_URL` into deploys built on its CI (git-triggered), so DB functions 502 on locally-built drafts. Verify DB behaviour on git deploys (debugged 2026-07-16)
 - sponsor logo filenames have spaces — handled by encodeURIComponent in site-content.js
 - Google Calendar iframe embed uses calendar ID: e12d0...@group.calendar.google.com
 - BeautifulSoup4 needed for HTML editing: `pip install beautifulsoup4`

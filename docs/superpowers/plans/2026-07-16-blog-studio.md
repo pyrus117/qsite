@@ -8,7 +8,7 @@
 
 **Tech Stack:** Netlify Functions + Netlify Database (`@netlify/database`, `drizzle-orm@beta`, `drizzle-kit@beta`), `@netlify/identity`, esbuild, vitest, Python 3 stdlib for the runner, pytest.
 
-> **Progress (2026-07-16):** Tasks 1–12 implemented, verified, committed. Task 13 stopped at Step 1: `netlify` CLI is not logged in (needs Nate to run `npx netlify login`), and the Task 2 dashboard steps (repo link, `RUNNER_TOKEN`/`GITHUB_REPO`/`GITHUB_TOKEN` env vars, PAT) are unverified. CLAUDE.md rewrite (Step 5) done. **Do not `git push` until the draft deploy is verified** — if the site is already git-linked, a push production-deploys everything untested. One deviation from plan: `tests/runner/test_stages.py` fake matches "produce a research brief" (not "research brief") because the draft prompt quotes the brief and collided.
+> **Progress (2026-07-16, evening):** Tasks 1–12 done. Task 13: DB provisioned + migration applied, all three env vars set, repo git-linked, production deployed and smoke-tested (runner endpoints, auth rejections, /studio/ + noindex all green). Discovery during Task 13: CLI draft deploys never receive `NETLIFY_DB_URL` — only Netlify-CI (git) builds do, so the plan's "verify on the draft URL" step works for everything *except* DB functions. Remaining: Identity dashboard checklist (Step 2), browser verification of studio login/roles/test publish + runner dry-run (Step 3). One deviation from plan: `tests/runner/test_stages.py` fake matches "produce a research brief" (not "research brief") because the draft prompt quotes the brief and collided.
 
 ## Global Constraints
 
