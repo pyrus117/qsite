@@ -1,0 +1,204 @@
+{
+  "sponsors": [
+    {
+      "name": "Tindall Foundation",
+      "logo": "TTF Full logo USE THIS ONE.jpg",
+      "width": 131,
+      "height": 120
+    },
+    {
+      "name": "Rata Foundation",
+      "logo": "rata_positive_cmyk_small.jpg",
+      "width": 360,
+      "height": 90
+    },
+    {
+      "name": "Rule Foundation",
+      "logo": "RF+Logo+Rainbow+Line-68246b1.png",
+      "width": 360,
+      "height": 78
+    },
+    {
+      "name": "Nelson City Council",
+      "logo": "18740 NCC_Brand Update Te Reo with Caps_Mar20 .jpg",
+      "width": 192,
+      "height": 120
+    },
+    {
+      "name": "Lottery Grants Board",
+      "logo": "Lottery-Grants-Board.jpg",
+      "width": 313,
+      "height": 120
+    },
+    {
+      "name": "ASB Community Trust",
+      "logo": "ASB logo.png",
+      "bgColor": "",
+      "width": 251,
+      "height": 120
+    },
+    {
+      "name": "RCT",
+      "logo": "RCT.png",
+      "width": 360,
+      "height": 64
+    },
+    {
+      "name": "Clare Foundation",
+      "logo": "Clare_Logo_Black+Yellow_1.jpg",
+      "width": 180,
+      "height": 120
+    },
+    {
+      "name": "Lion Foundation",
+      "logo": "LF_CorporateLogo_jpg_A.jpg",
+      "width": 360,
+      "height": 89
+    }
+  ],
+  "directory": [
+    {
+      "name": "Nayland Pride",
+      "description": "An LGBT pride group within Nayland College.",
+      "location": "Nelson",
+      "badge": "badge-purple",
+      "logo": "rs=w_355,h_178,cg_true.webp",
+      "website": ""
+    },
+    {
+      "name": "PRISM Club",
+      "description": "An LGBT space in Nelson College for Girls.",
+      "location": "Nelson",
+      "badge": "badge-purple",
+      "logo": "rs=w_355,cg_true.webp",
+      "website": "",
+      "bgColor": ""
+    },
+    {
+      "name": "MAQS – Motueka Alliance of Queers & Straights",
+      "description": "An LGBTQIA+ friendly group operating in Motueka.",
+      "location": "Motueka",
+      "badge": "badge-teal",
+      "logo": "rs=w_355,h_267,cg_true.webp",
+      "website": ""
+    },
+    {
+      "name": "Tasman Lesbian Connection",
+      "description": "A group for lesbians, bisexuals and women questioning their sexuality.",
+      "location": "Tasman",
+      "badge": "badge-teal",
+      "logo": "rs=w_355,h_267,cg_true (1).webp",
+      "website": ""
+    },
+    {
+      "name": "Pride Wairau",
+      "description": "An LGBTQIA+ group operating in Marlborough.",
+      "location": "Marlborough",
+      "badge": "badge-amber",
+      "logo": "25-2_edited (1).avif",
+      "website": "https://www.pridewairau.co.nz/",
+      "bgColor": "#000000"
+    },
+    {
+      "name": "Whakatū Pride",
+      "description": "An LGBTQIA+ group for adults in Nelson.",
+      "location": "Nelson",
+      "badge": "badge-purple",
+      "logo": "rs=w_355,h_267,cg_true (2).webp",
+      "website": "https://whakatupride.co.nz/",
+      "bgColor": ""
+    }
+  ],
+  "resources": [
+    {
+      "group": "Downloadable Guides",
+      "items": [
+        {
+          "title": "Puberty Blockers Information",
+          "description": "Clear, factual information about puberty blockers",
+          "type": "pdf",
+          "url": "resources/Q-Youth — Information About Puberty Blockers.pdf"
+        },
+        {
+          "title": "Pronouns Guide",
+          "description": "A printable PDF guide to pronouns and inclusive language",
+          "type": "pdf",
+          "url": "resources/Pronouns.pdf"
+        },
+        {
+          "title": "Pride Flags Reference",
+          "description": "Identification guide to LGBTQIA+ pride flags",
+          "type": "pdf",
+          "url": "resources/Pride flags.pdf"
+        },
+        {
+          "title": "Trans Dictionary",
+          "description": "A glossary of transgender and gender-diverse terminology",
+          "type": "pdf",
+          "url": "resources/A Trans Dictionary.pdf.pdf"
+        }
+      ]
+    },
+    {
+      "group": "Videos — Pronouns",
+      "items": [
+        {
+          "title": "What Are Pronouns?",
+          "description": "Gender-diverse youth discuss pronouns, their importance, and common mistakes",
+          "type": "video",
+          "url": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/3xpvricekxU?si=hX0Ufjl2bV7fHjkB\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>"
+        },
+        {
+          "title": "Pronouns Explained",
+          "description": "Educational content for children about gender-neutral pronouns",
+          "type": "video",
+          "url": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/OePy0AjVU7s?si=LKcAqctbUxDG2JSj\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>"
+        },
+        {
+          "title": "They/Them Pronouns",
+          "description": "A practical guide to using they/them pronouns correctly",
+          "type": "video",
+          "url": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/QeA9PwWUdIA?si=IQO3Z-ijrPUF8_SC\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>"
+        },
+        {
+          "title": "The Pronouns Song",
+          "description": "A fun, musical introduction to pronouns",
+          "type": "video",
+          "url": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/oVaxNU0ba24?si=12IoUthX8SP7PD07\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>"
+        }
+      ]
+    },
+    {
+      "group": "External Resources",
+      "items": [
+        {
+          "title": "InsideOUT Pronouns Resource",
+          "description": "Comprehensive pronoun guide from InsideOUT",
+          "type": "link",
+          "url": "https://insideout.org.nz/33038-2/"
+        },
+        {
+          "title": "InsideOUT Organisation",
+          "description": "National organisation supporting rainbow rangatahi",
+          "type": "link",
+          "url": "https://insideout.org.nz/about/"
+        },
+        {
+          "title": "Full Disclosure Podcast",
+          "description": "Prominent New Zealand LGBTQ+ people share their coming out stories, hosted by Karen O'Leary",
+          "type": "link",
+          "url": "https://interactives.stuff.co.nz/full-disclosure-podcast/"
+        }
+      ]
+    }
+  ],
+  "blog": [
+    {
+      "title": "Welcome to the Q Youth blog",
+      "date": "2026-07-16",
+      "body": "Kia ora! This is our new blog — a space where we'll share news, updates, and kōrero on topical issues that matter to rainbow rangatahi and their whānau in Te Tau Ihu.\n\nCheck back here for posts about what's happening at Q Youth, upcoming events, and issues affecting our community. If there's a topic you'd like us to cover, get in touch — we'd love to hear from you.",
+      "link": "index.html#contact",
+      "linkLabel": "Get in touch"
+    }
+  ]
+}
