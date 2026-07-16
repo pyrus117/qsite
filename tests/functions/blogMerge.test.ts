@@ -44,4 +44,12 @@ describe("mergePost", () => {
     const out = JSON.parse(mergePost(fixture, post));
     expect(out.blog[0]).not.toHaveProperty("author");
   });
+  it("passes imageCredit through when provided", () => {
+    const out = JSON.parse(mergePost(fixture, { ...post, imageCredit: "Photo: Jane / Unsplash" }));
+    expect(out.blog[0].imageCredit).toBe("Photo: Jane / Unsplash");
+  });
+  it("omits imageCredit when not provided", () => {
+    const out = JSON.parse(mergePost(fixture, post));
+    expect(out.blog[0]).not.toHaveProperty("imageCredit");
+  });
 });

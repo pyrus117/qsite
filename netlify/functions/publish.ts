@@ -38,6 +38,7 @@ export default async (req: Request, context: Context) => {
       // runner posts are always authored by Nate (admin-only publish enforced above)
       author: idea.source === "agent" ? "Nate" : undefined,
       image: draft.image ?? undefined, imageAlt: draft.imageAlt ?? undefined,
+      imageCredit: draft.imageCredit ?? undefined,
       link: draft.link ?? undefined, linkLabel: draft.linkLabel ?? undefined,
     });
     await putFile("public/site-data.json", merged,

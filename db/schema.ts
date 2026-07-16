@@ -21,6 +21,7 @@ export const drafts = pgTable("drafts", {
   reflectionNotes: text("reflection_notes"),
   image: varchar({ length: 255 }),
   imageAlt: varchar("image_alt", { length: 255 }),
+  imageCredit: varchar("image_credit", { length: 255 }),
   link: varchar({ length: 255 }),
   linkLabel: varchar("link_label", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),

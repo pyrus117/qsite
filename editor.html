@@ -974,6 +974,7 @@ function blogForm(p){
   <span id="f-bimg-status" style="font-size:.72rem;color:var(--mu)"></span>
 </div>
 <div class="fg"><label>Image description<span class="hint">For screen readers — describe what's in the photo.</span></label><input id="f-balt" type="text" value="${esc(p.imageAlt||'')}"></div>
+<div class="fg"><label>Image credit<span class="hint">Attribution shown on hover, e.g. "Photo: Jane / Unsplash".</span></label><input id="f-bcredit" type="text" value="${esc(p.imageCredit||'')}"></div>
 <div class="fg"><label>Link<span class="hint">Optional "Read more" button — a full URL, or a page like events.html.</span></label><input id="f-blink" type="text" value="${esc(p.link||'')}" placeholder="https://..."></div>
 <div class="fg"><label>Link button text</label><input id="f-blinklabel" type="text" value="${esc(p.linkLabel||'')}" placeholder="Read more"></div>`;
 }
@@ -1035,7 +1036,7 @@ function saveModal(){
     // spread original first so keys unknown to this form (author, future fields) survive edits
     const base=mAction==='ed-b'?{...D.blog[mCtx]}:{};
     const obj={...base,title:t,date:g('f-bdate'),body:document.getElementById('f-bbody').value.trim(),
-               image:g('f-bimage'),imageAlt:g('f-balt'),link:g('f-blink'),linkLabel:g('f-blinklabel')};
+               image:g('f-bimage'),imageAlt:g('f-balt'),imageCredit:g('f-bcredit'),link:g('f-blink'),linkLabel:g('f-blinklabel')};
     mAction==='add-b'?D.blog.push(obj):D.blog[mCtx]=obj;
     renderBlogPanel();
   } else if(mAction==='add-g'){

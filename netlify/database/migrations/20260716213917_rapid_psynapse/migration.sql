@@ -1,0 +1,1 @@
+ALTER TABLE "drafts" ADD COLUMN "image_credit" varchar(255);

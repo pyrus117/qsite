@@ -3,7 +3,9 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { drafts, ideas, runnerHeartbeat } from "../../db/schema";
 import { requireRunner } from "./_shared/auth";
+import { putBinaryFile } from "./_shared/github";
 import { json } from "./_shared/http";
+import { stripDataUri, validateImageUpload } from "./_shared/imageUpload";
 import { canTransition } from "./_shared/transitions";
 
 export default async (req: Request, context: Context) => {
@@ -51,7 +53,9 @@ export default async (req: Request, context: Context) => {
           title: body.draft.title ?? latest?.title ?? idea.title,
           body: body.draft.body ?? latest?.body ?? null,
           reflectionNotes: body.draft.reflectionNotes ?? null,
-          image: latest?.image ?? null, imageAlt: latest?.imageAlt ?? null,
+          image: body.draft.image ?? latest?.image ?? null,
+          imageAlt: body.draft.imageAlt ?? latest?.imageAlt ?? null,
+          imageCredit: body.draft.imageCredit ?? latest?.imageCredit ?? null,
           link: latest?.link ?? null, linkLabel: latest?.linkLabel ?? null,
         });
       }
@@ -60,6 +64,18 @@ export default async (req: Request, context: Context) => {
         .set({ status: body.status, error: body.error ?? null, updatedAt: new Date() })
         .where(eq(ideas.id, idea.id)).returning();
       return json({ idea: updated });
+    }
+
+    if (action === "image") {
+      // runner-token image upload — same validation as images.ts but no SVG (XSS risk)
+      const body = await req.json();
+      const err = validateImageUpload(body.filename ?? "", body.data ?? "", { allowSvg: false });
+      if (err) return json({ error: err }, err.includes("large") ? 413 : 422);
+
+      const name = (body.filename as string).split(/[\\/]/).pop()!;
+      const base64 = stripDataUri(body.data as string);
+      await putBinaryFile(`public/images/${name}`, base64, `blog: add image ${name}`);
+      return json({ filename: name }, 201);
     }
 
     return json({ error: "Unknown runner action" }, 404);

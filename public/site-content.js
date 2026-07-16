@@ -290,6 +290,8 @@
           img.src     = _imgPath('images/', post.image);
           img.alt     = post.imageAlt || '';
           img.loading = 'lazy';
+          // image-attribution.js reads data-attribution for hover tooltip
+          if (post.imageCredit) img.setAttribute('data-attribution', post.imageCredit);
           img.onerror = function () {
             if (article.contains(figure)) article.removeChild(figure);
           };

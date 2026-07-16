@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Q Youth Blog Studio runner — polls the studio API, does agent stages via claude CLI.
 Run on Nate's PC:  python3 runner/runner.py   (config via runner/.env)"""
-import json, os, subprocess, sys, time, urllib.error, urllib.request
+import base64, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -28,6 +28,93 @@ def _ensure_greeting(body):
     if body.startswith(GREETING):
         return body
     return GREETING + "\n\n" + body
+
+# ── image pipeline helpers ────────────────────────────────────────
+_ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+_MAX_BYTES = 3 * 1024 * 1024  # 3MB cap — mirrors images.ts
+
+
+def _slugify(title: str) -> str:
+    # URL-safe slug for use as image filename base
+    s = title.lower().strip()
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+    return s.strip("-")
+
+
+def _parse_image_candidate(raw: str):
+    """Return parsed dict or None — never raises."""
+    try:
+        # strip markdown code fences the model sometimes adds
+        text = re.sub(r"^```[a-z]*\n?", "", raw.strip(), flags=re.IGNORECASE)
+        text = re.sub(r"\n?```$", "", text)
+        obj = json.loads(text)
+        if obj is None:
+            return None
+        if not isinstance(obj, dict) or not obj.get("image_url"):
+            return None
+        return obj
+    except Exception:
+        return None
+
+
+def _download_image(url: str):
+    """Download url → (bytes, ext).  Raises ValueError for rejected content."""
+    ext = Path(urllib.parse.urlparse(url).path).suffix.lower()
+    if ext not in _ALLOWED_EXTS:
+        raise ValueError(f"Disallowed extension '{ext}' — must be one of {_ALLOWED_EXTS}")
+    req = urllib.request.Request(url, headers={"User-Agent": "Q-Youth-Runner/1.0"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = resp.read()
+    if len(data) > _MAX_BYTES:
+        raise ValueError(f"Image too large ({len(data)//1024}KB > 3MB limit)")
+    return data, ext
+
+
+def _find_image(title: str, body: str) -> dict | None:
+    """Ask claude to find a reuse-licensed image; return candidate dict or None."""
+    prompt = (
+        f"Find a reuse-licensed image relevant to this blog post topic.\n"
+        f"Post title: {title}\n"
+        f"Post opening: {body[:300]}\n\n"
+        f"Search Wikimedia Commons, Unsplash, Pexels, or similar. "
+        f"Return JSON only (no markdown): "
+        f'{{\"image_url\": \"<direct image URL>\", \"page_url\": \"<source page>\", '
+        f'\"alt\": \"<description>\", \"credit\": \"Photo: <creator> / <source>\", '
+        f'\"license\": \"<license name>\"}} '
+        f"or null if nothing suitable is found. "
+        f"The image must be genuinely reuse-licensed — do not return copyrighted images."
+    )
+    raw = claude_call(prompt, tools=["WebSearch", "WebFetch"])
+    return _parse_image_candidate(raw)
+
+
+def _run_image_step(idea: dict, draft_body: str) -> dict:
+    """Try find→download→upload. Returns image-field dict (may be empty on any failure)."""
+    if os.environ.get("RUNNER_DRY_RUN"):
+        return {}  # skip entirely in dry-run
+
+    try:
+        candidate = _find_image(idea["title"], draft_body)
+        if not candidate:
+            print("  [image] no suitable candidate found — skipping", file=sys.stderr)
+            return {}
+
+        data, ext = _download_image(candidate["image_url"])
+        slug = _slugify(idea["title"])
+        filename = f"{slug}{ext}"
+        b64 = base64.b64encode(data).decode()
+        result = api("/api/runner/image", {"filename": filename, "data": b64})
+        stored_name = result.get("filename", filename)
+        return {
+            "image": stored_name,
+            "imageAlt": candidate.get("alt", ""),
+            "imageCredit": candidate.get("credit", ""),
+        }
+    except Exception as e:
+        # fail-soft: warn loudly but never block the draft stage
+        print(f"  [image] WARNING — skipping image (reason: {e})", file=sys.stderr)
+        return {}
+
 
 # ── prompts ──────────────────────────────────────────────────────
 def build_prompt(stage, idea, prior, style):
@@ -153,6 +240,9 @@ def process(idea):
             draft = {"body": out["body"]}
             if out.get("title"):
                 draft["title"] = out["title"]
+            # image sub-step: fail-soft — fields added only if successful
+            img_fields = _run_image_step(idea, out["body"])
+            draft.update(img_fields)
         elif stage == "reflect":
             draft = {"reflectionNotes": out["reflectionNotes"]}
             if out.get("revised_body"):
