@@ -4,3 +4,7 @@ __pycache__/
 .env
 node_modules/
 .superpowers/
+public/studio/studio.js
+
+# Local Netlify folder
+.netlify

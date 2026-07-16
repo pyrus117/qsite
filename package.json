@@ -1,0 +1,39 @@
+{
+  "name": "qsite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "editor-inject.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "esbuild studio-src/studio.js --bundle --minify --outfile=public/studio/studio.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "netlify database migrations apply",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyrus117/qsite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/pyrus117/qsite/issues"
+  },
+  "homepage": "https://github.com/pyrus117/qsite#readme",
+  "dependencies": {
+    "@netlify/database": "^1.1.0",
+    "@netlify/functions": "^5.3.0",
+    "@netlify/identity": "^1.2.0",
+    "drizzle-orm": "^1.0.0-beta.22"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^1.0.0-beta.22",
+    "esbuild": "^0.28.1",
+    "netlify-cli": "^26.2.0",
+    "vitest": "^4.1.10"
+  }
+}
