@@ -97,6 +97,20 @@ describe("requireUser (Access JWT)", () => {
     const res = await requireUser(new Request("http://x/"), ["admin"]);
     expect(res).not.toBeInstanceOf(Response);
   });
+  it("rejects with 401 when CF_ACCESS_AUD is unset (fail closed)", async () => {
+    delete process.env.CF_ACCESS_AUD;
+    const req = await signedRequest(privateKey, "nate@qyouthnz.com");
+    const res = await requireUser(req, ["editor"], publicKey);
+    expect(res).toBeInstanceOf(Response);
+    expect((res as Response).status).toBe(401);
+  });
+  it("rejects with 401 when CF_ACCESS_TEAM_DOMAIN is unset (fail closed)", async () => {
+    delete process.env.CF_ACCESS_TEAM_DOMAIN;
+    const req = await signedRequest(privateKey, "nate@qyouthnz.com");
+    const res = await requireUser(req, ["editor"], publicKey);
+    expect(res).toBeInstanceOf(Response);
+    expect((res as Response).status).toBe(401);
+  });
 });
 
 describe("requireRunner", () => {

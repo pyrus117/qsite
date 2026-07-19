@@ -37,6 +37,11 @@ export async function requireUser(
   const devEmail = process.env.DEV_USER_EMAIL; // wrangler dev only — never set in production
   if (devEmail) return allow({ email: devEmail, roles: rolesForEmail(devEmail) }, allowed);
 
+  // jose skips a claim check when its option is undefined, so missing config must fail closed explicitly
+  if (!process.env.CF_ACCESS_TEAM_DOMAIN || !process.env.CF_ACCESS_AUD) {
+    return json({ error: "Not logged in" }, 401);
+  }
+
   const token = req.headers.get("cf-access-jwt-assertion");
   if (!token) return json({ error: "Not logged in" }, 401);
   try {
