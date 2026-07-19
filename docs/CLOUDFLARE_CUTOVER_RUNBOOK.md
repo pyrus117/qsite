@@ -145,7 +145,7 @@ Note what you see, then in a new Claude Code session:
     npx wrangler deploy
     ```
 
-**Note:** Full Access login testing happens after Step 6 (when DNS points to Cloudflare). Access only enforces on the custom domain, not on workers.dev.
+**Note:** Full Access login testing happens after Step 7 (when DNS points to Cloudflare). Access only enforces on the custom domain, not on workers.dev.
 
 ---
 
