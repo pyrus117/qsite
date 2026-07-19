@@ -1,7 +1,7 @@
 # Q Youth NZ — Site Project Tracker
 
 ## What This Is
-Charity website for Q Youth NZ (qyouthnz.com) — static HTML/CSS/JS site in `public/`, plus the **Blog Studio**: a login-protected dashboard at `/studio/` (Netlify Functions + Netlify Database) where invited users publish blog posts and Nate runs an AI research→draft→reflect pipeline.
+Charity website for Q Youth NZ (qyouthnz.com) — static HTML/CSS/JS site in `public/`, plus the **Blog Studio**: a login-protected dashboard at `/studio/` (Cloudflare Worker + Neon Postgres via Drizzle) where invited users publish blog posts and Nate runs an AI research→draft→reflect pipeline.
 LGBTQIA+/Takatāpui rangatahi support organisation, Nelson/Tasman, New Zealand.
 
 ## File Inventory
@@ -14,33 +14,38 @@ LGBTQIA+/Takatāpui rangatahi support organisation, Nelson/Tasman, New Zealand.
 | `public/site-data.json` | Sponsors, directory, resources, blog posts — rendered at runtime by `site-content.js` |
 | `public/studio/` | Blog Studio SPA (`index.html`, `studio.css`; `studio.js` is a gitignored esbuild artefact) |
 | `studio-src/studio.js` | Studio SPA source — bundled by `npm run build` |
-| `netlify/functions/` | API: `ideas.ts`, `drafts.ts`, `runner.ts`, `publish.ts`, `images.ts` + `_shared/` helpers |
-| `netlify/database/migrations/` | Drizzle migrations — applied automatically at deploy |
-| `db/schema.ts`, `db/index.ts` | Drizzle schema (ideas, drafts, runner_heartbeat) + client |
+| `worker/index.ts` | Worker entry — route table + `matchRoute`; studio API is `/studio/api/*` (behind Cloudflare Access), runner API stays `/api/runner/*` (bearer `RUNNER_TOKEN`, outside Access) |
+| `worker/api/` | Endpoints: `ideas.ts`, `drafts.ts`, `runner.ts`, `publish.ts`, `images.ts`, `me.ts` |
+| `worker/_shared/` | Helpers: `auth.ts`, `http.ts`, `github.ts`, `blogMerge.ts`, `imageUpload.ts`, `transitions.ts` |
+| `db/migrations/` | Drizzle migrations — applied manually with `npm run db:migrate` |
+| `db/schema.ts`, `db/index.ts` | Drizzle schema (ideas, drafts, runner_heartbeat) + `getDb()` client (`drizzle-orm/neon-http`) |
 | `runner/runner.py` | Local AI runner — polls the studio API, runs claude CLI stages (config in `runner/.env`) |
 | `runner/blog_style_guide.json` | Voice/rules/structure fed into every runner prompt |
-| `netlify.toml` | Build (`npm run build`), publish dir `public`, `/studio/*` noindex headers |
-| `tests/functions/` (vitest), `tests/runner/` (pytest via `.venv/bin/python -m pytest`) | Test suites |
+| `wrangler.jsonc` | Worker config — vars, dev settings; deploy runs `npx wrangler deploy` |
+| `public/_headers` | Ported response headers (was `netlify.toml` headers block) |
+| `tests/worker/` (vitest), `tests/runner/` (pytest via `.venv/bin/python -m pytest`) | Test suites |
 | `editor.py`, `editor.html`, `editor-inject.js`, `launch.*` | Local site editor (edits files under `public/`) — never deployed |
 | `docs/superpowers/` | Blog Studio spec + implementation plan |
 
 ## Deployment Workflow
 
-Hosting is **Netlify**, git-connected to `pyrus117/qsite` — deployment is a `git push`:
+Hosting is **Cloudflare Workers**, git-connected via Workers Builds to `pyrus117/qsite` branch `main` — deployment is a `git push`:
 
 1. Edit content (local editor or by hand) → files change under `public/`
-2. Commit and `git push` — Netlify runs `npm run build`, publishes `public/`, applies any new DB migrations
+2. Commit and `git push` — Cloudflare runs `npm run build` then `npx wrangler deploy`
 3. **A Save in the local editor no longer deploys anything** — changes go live only on push
 4. Blog posts published via the Studio commit `public/site-data.json` straight to GitHub → auto-deploy; no local step
-5. Rollback: Netlify → Deploys → previous deploy → **Publish deploy**
+5. DB migrations are **not** applied at deploy — run manually: `DATABASE_URL=… npm run db:migrate`
+6. Rollback: Workers → Deployments → previous deployment → **Rollback**
 
 ## Blog Studio
 
-- URL: `https://qyouthnz.com/studio/` (noindex; Netlify Identity, invite-only)
-- Roles (server-side enforced): **admin** (Nate — AI pipeline, approve, publish anything) and **editor** (manual posting only)
+- URL: `https://qyouthnz.com/studio/` (noindex; **Cloudflare Access**, invite-only — Zero Trust app on `qyouthnz.com/studio`, invite = add the email to the Access policy)
+- Roles (server-side enforced from the `Cf-Access-Jwt-Assertion` JWT): `ADMIN_EMAILS` var → **admin** (Nate — AI pipeline, approve, publish anything), any other allowed email → **editor** (manual posting only)
 - Idea statuses: `pending → researching → drafting → reflecting → ready → approved → published` (+ `failed`); illegal transitions rejected server-side; only humans can approve/publish
 - **The AI stages only run while `runner/runner.py` is running on Nate's PC** (polls with `RUNNER_TOKEN`; heartbeat shows as "Runner: online" in the studio)
-- Env vars in Netlify: `RUNNER_TOKEN`, `GITHUB_REPO`, `GITHUB_TOKEN` (fine-grained PAT, Contents R/W on qsite only)
+- Secrets (`wrangler secret put`): `DATABASE_URL`, `RUNNER_TOKEN`, `GITHUB_TOKEN` (fine-grained PAT, Contents R/W on qsite only)
+- Vars (`wrangler.jsonc`): `GITHUB_REPO`, `ADMIN_EMAILS`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`
 
 ## Editor Usage
 
@@ -116,7 +121,7 @@ missing = [p for p in pages if not os.path.exists('public/'+p+'.html')]
 print('MISSING:', missing or 'none')
 "
 
-# 5. Function + runner test suites
+# 5. Worker + runner test suites
 npm test
 .venv/bin/python -m pytest tests/runner/
 
@@ -127,9 +132,8 @@ npm test
 
 ## Known Issues / Notes
 
-- Hosting moved from GoDaddy to Netlify (git-connected) 2026-07-16 — any GoDaddy/cPanel upload instructions you find elsewhere are obsolete
-- Netlify Identity does **not** work under `netlify dev` — Identity-authed studio behaviour is only testable on a deploy; runner-token endpoints test fine locally (`.env` with `RUNNER_TOKEN=devtoken`)
-- **CLI draft deploys (`netlify deploy`) cannot reach the database** — Netlify only injects `NETLIFY_DB_URL` into deploys built on its CI (git-triggered), so DB functions 502 on locally-built drafts. Verify DB behaviour on git deploys (debugged 2026-07-16)
+- Hosting moved from GoDaddy to Netlify (git-connected) 2026-07-16, then Netlify to **Cloudflare Workers** (git-connected via Workers Builds) 2026-07-19 — any GoDaddy/cPanel or Netlify-specific instructions you find elsewhere are obsolete
+- Local dev: `npm run dev` (wrangler dev, serves site + API on :8787). Access is absent locally — `DEV_USER_EMAIL` in `.dev.vars` stands in for a logged-in user and must never be set as a production var
 - sponsor logo filenames have spaces — handled by encodeURIComponent in site-content.js
 - Google Calendar iframe embed uses calendar ID: e12d0...@group.calendar.google.com
 - BeautifulSoup4 needed for HTML editing: `pip install beautifulsoup4`

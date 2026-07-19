@@ -6,8 +6,8 @@ node_modules/
 .superpowers/
 public/studio/studio.js
 
-# Local Netlify folder
-.netlify
+# Local Wrangler dev state
+.wrangler
 deno.lock
 runner/.env
 .dev.vars
