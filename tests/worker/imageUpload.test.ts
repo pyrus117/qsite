@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateImageUpload } from "../../netlify/functions/_shared/imageUpload";
+import { validateImageUpload } from "../../worker/_shared/imageUpload";
 
 describe("validateImageUpload", () => {
   it("accepts valid jpg filename", () => {

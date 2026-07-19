@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTransition } from "../../netlify/functions/_shared/transitions";
+import { canTransition } from "../../worker/_shared/transitions";
 
 describe("canTransition", () => {
   it.each([

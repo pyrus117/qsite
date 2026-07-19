@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { mergePost } from "../../netlify/functions/_shared/blogMerge";
+import { mergePost } from "../../worker/_shared/blogMerge";
 
-const fixture = readFileSync("tests/functions/fixtures/site-data.json", "utf-8");
+const fixture = readFileSync("tests/worker/fixtures/site-data.json", "utf-8");
 const post = { title: "Test post", date: "2026-07-20", body: "First para.\n\nSecond para." };
 
 describe("mergePost", () => {

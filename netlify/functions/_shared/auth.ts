@@ -1,6 +1,6 @@
 import { getUser } from "@netlify/identity";
 import { timingSafeEqual } from "node:crypto";
-import { json } from "./http";
+import { json } from "../../../worker/_shared/http";
 
 export function rolesOf(user: unknown): string[] {
   const u = user as Record<string, any> | null;
