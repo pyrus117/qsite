@@ -10,3 +10,4 @@ public/studio/studio.js
 .netlify
 deno.lock
 runner/.env
+.dev.vars

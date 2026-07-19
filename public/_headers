@@ -1,0 +1,25 @@
+/studio/*
+  X-Robots-Tag: noindex, nofollow
+
+/*
+  Link: </styles.css>; rel=preload; as=style
+
+/
+  ! Link
+  Link: </styles.css>; rel=preload; as=style, </site-content.js>; rel=preload; as=script, </site-data.json>; rel=preload; as=fetch; crossorigin
+
+/index.html
+  ! Link
+  Link: </styles.css>; rel=preload; as=style, </site-content.js>; rel=preload; as=script, </site-data.json>; rel=preload; as=fetch; crossorigin
+
+/blog.html
+  ! Link
+  Link: </styles.css>; rel=preload; as=style, </site-content.js>; rel=preload; as=script, </site-data.json>; rel=preload; as=fetch; crossorigin
+
+/resources.html
+  ! Link
+  Link: </styles.css>; rel=preload; as=style, </site-content.js>; rel=preload; as=script, </site-data.json>; rel=preload; as=fetch; crossorigin
+
+/local-directory.html
+  ! Link
+  Link: </styles.css>; rel=preload; as=style, </site-content.js>; rel=preload; as=script, </site-data.json>; rel=preload; as=fetch; crossorigin

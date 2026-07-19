@@ -10,6 +10,8 @@
     "build": "esbuild studio-src/studio.js --bundle --minify --outfile=public/studio/studio.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "netlify database migrations apply",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
     "test": "vitest run"
   },
   "repository": {
@@ -34,7 +36,8 @@
     "drizzle-kit": "^1.0.0-beta.22",
     "esbuild": "^0.28.1",
     "netlify-cli": "^26.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.0.0"
   },
   "overrides": {
     "@opentelemetry/api": "^1.9.0"
