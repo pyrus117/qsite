@@ -1,20 +1,36 @@
 # Cloudflare Cutover Runbook
 
-## URGENT — Claim the Neon Database (do first, deadline ~2026-07-23)
+## URGENT — Secure the Neon Database + get its connection string (do first)
 
-**This step has a hard deadline. Netlify's database offering sunsets ~2026-07-23 for unpaid projects. Do this within the next few days.**
+**Why first:** the database holds your Blog Studio data and does NOT move in this migration — the worker connects to the same Neon Postgres. You need two things from this step: (a) the database safely owned by a Neon account so it can't be auto-deleted, and (b) its connection string.
 
-1. Go to **Netlify dashboard** → select the `qsite` project → **Extensions** (left sidebar) → **Database**
-2. Click **"Claim database"** — this hands the database to your Neon account at neon.tech
-3. Open **neon.tech** in a new tab, sign in to your account
-4. Navigate to **Dashboard** → select the `qsite` project
-5. Click **Connection Details** (top right)
-6. Copy the **pooled connection string** (it looks like `postgresql://user:password@host/dbname?sslmode=require`)
-7. Open your terminal on your PC, navigate to the repo:
+**About the deadline:** the old Netlify DB beta auto-deletes *unclaimed* databases ~7 days after creation. **But if you already have a Neon account, Netlify connects the database to it automatically — in which case there is nothing to claim and no deadline.** That is the most likely reason you see no "claim" option. The button was also renamed from "Claim database" to **"Connect Neon"**.
+
+### 1a. Check whether the database is already safe (30 seconds, do this first)
+
+1. Open **[neon.tech](https://neon.tech)** in a new tab and sign in (if you have a Neon account — try your Google/GitHub login, it may have been created automatically).
+2. Look for a project/database named `qsite` (or similar).
+   - **If it's there → it's already yours and safe.** Skip to step 1c. No deadline applies.
+   - **If it's NOT there, or you have no Neon account →** go to 1b to claim it now.
+
+### 1b. Claim it (only if 1a came up empty)
+
+1. **Netlify dashboard** → select the `qsite` project → **Extensions** (left sidebar) → **Database** (if there's no Database entry there, check **Project configuration → Data and storage**).
+2. Click **"Connect Neon"** (this is the renamed "Claim database" button) and create/sign in to a free Neon account. The database transfers to your account.
+3. Confirm it now appears at [neon.tech](https://neon.tech).
+
+### 1c. Get the connection string
+
+1. In **neon.tech**: select the `qsite` project → **Connection Details** (top right) → copy the **pooled connection string** (looks like `postgresql://user:password@host/dbname?sslmode=require`).
+2. **Fallback if you can't reach it via Neon:** the same string is stored in Netlify as an environment variable. **Netlify dashboard → `qsite` → Site configuration → Environment variables →** copy `NETLIFY_DATABASE_URL` (older sites: `NETLIFY_DB_URL`). That value works as-is.
+
+### 1d. Baseline-check the migrations
+
+1. Open your terminal on your PC, navigate to the repo:
    ```bash
    cd /path/to/qsite
    ```
-8. Run the migration baseline check:
+2. Run the migration baseline check:
    ```bash
    DATABASE_URL='<paste-the-pooled-string-here>' npm run db:migrate
    ```
