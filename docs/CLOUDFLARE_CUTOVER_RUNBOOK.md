@@ -169,6 +169,15 @@ Note what you see, then in a new Claude Code session:
 
 ## Step 6: Merge Branch and Let CI Deploy
 
+### Before you merge — freeze Netlify first
+
+The `cloudflare-migration` branch deletes `netlify.toml`, which is where Netlify learns the publish directory (`public`) and build command. Once you merge to `main`, Netlify no longer knows any of that from the repo — so a post-merge rebuild could succeed anyway (publishing the wrong folder, e.g. the repo root) and replace the live site with a broken deploy while DNS still points at Netlify. Do one of the following **before** you merge:
+
+1. **Preferred:** In the Netlify dashboard → the `qsite` site → **Deploys**, find the current published deploy and click **"Lock deploy"** (labelled "Stop auto publishing" in some UI versions). This freezes the live site at the current deploy no matter what later builds do. It's one click and fully reversible.
+2. **Alternative**, if you can't find the lock option: go to **Site configuration** → **Build & deploy** → **Build settings**, and either set **Publish directory** to `public` explicitly (so even a successful rebuild publishes the right folder), or turn off builds entirely (**Build settings** → **"Stop builds"**).
+
+Only once the deploy is locked (or builds are stopped / publish dir is pinned) should you continue with the merge below.
+
 1. From your terminal:
    ```bash
    git checkout main
@@ -183,8 +192,8 @@ Note what you see, then in a new Claude Code session:
 
 **What happens now:**
 - Your Cloudflare worker is live on the custom domain (once DNS points — that's Step 7)
-- The Netlify site is **still serving** its last good deploy until you move DNS (expected; no traffic loss)
-- Netlify's CI build is now broken (expected; you'll delete that site in Step 9)
+- With the deploy locked (or builds stopped), **Netlify keeps serving** its last good deploy until you move DNS (expected; no traffic loss)
+- Netlify's CI build is now broken or disabled (expected; you'll delete that site in Step 9)
 
 ---
 
@@ -291,6 +300,8 @@ Expected: One `Link:` header line containing three comma-separated preloads — 
 ---
 
 ## Step 9: Decommission Netlify
+
+**Only proceed once Step 8's verification has passed.** Unlocking the deploy or deleting the Netlify site is safe at that point, since Cloudflare is confirmed serving the live site correctly.
 
 1. Go to **Netlify Dashboard** → select `qsite` → **Site settings** (left sidebar)
 2. Scroll to the bottom and click **Delete site**
