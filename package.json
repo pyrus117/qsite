@@ -9,7 +9,7 @@
   "scripts": {
     "build": "esbuild studio-src/studio.js --bundle --minify --outfile=public/studio/studio.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "netlify database migrations apply",
+    "db:migrate": "drizzle-kit migrate",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "vitest run"
@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/pyrus117/qsite#readme",
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@netlify/database": "^1.1.0",
     "@netlify/functions": "^5.3.0",
     "@netlify/identity": "^1.2.0",
