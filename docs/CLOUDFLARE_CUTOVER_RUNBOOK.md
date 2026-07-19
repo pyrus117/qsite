@@ -16,8 +16,9 @@
    ```
 8. Run the migration baseline check:
    ```bash
-   DATABASE_URL='<paste-the-pooled-string-here>' npx drizzle-kit migrate
+   DATABASE_URL='<paste-the-pooled-string-here>' npm run db:migrate
    ```
+   (`npm run db:migrate` runs `drizzle-kit migrate` under the hood.)
    **Expected output:** Either `No migrations to apply` (database is already tracked), or it creates the `drizzle.__drizzle_migrations` table and applies both migrations without error.
 
 ### Troubleshooting: If it errors "relation 'ideas' already exists"
@@ -43,7 +44,7 @@ Note what you see, then in a new Claude Code session:
 ## Step 2: Copy Environment Variables from Netlify
 
 1. Go to **Netlify dashboard** → select the `qsite` project → **Site settings** (left sidebar)
-2. Click **Build & deploy** → **Environment**
+2. Click **Site configuration** → **Environment variables**
 3. You'll see a list of environment variables. Record these three values (copy the full string, including hyphens):
    - `RUNNER_TOKEN` 
    - `GITHUB_TOKEN`
@@ -80,7 +81,7 @@ Note what you see, then in a new Claude Code session:
    ```bash
    npx wrangler secret put DATABASE_URL
    ```
-   (Paste the **pooled Neon connection string**, press Ctrl+D or Cmd+D to end input.)
+   (Paste the **pooled Neon connection string**, then press Enter.)
    
    ```bash
    npx wrangler secret put RUNNER_TOKEN
@@ -117,9 +118,12 @@ Note what you see, then in a new Claude Code session:
 5. Click **Next** → **Add a policy**
 6. Set the policy:
    - **Action:** Allow
-   - **Rule type:** Emails
+   - **Rule type:** Emails ending in
    - **Value:** `@qyouthnz.com` (anyone with a Q Youth email)
+   - (Do **not** pick plain "Emails" — that selector only matches exact addresses one at a time and will lock everyone else out.)
 7. Click **Save policy** → **Save application**
+
+**Troubleshooting:** If `/studio` later rejects a valid `@qyouthnz.com` login, re-check the policy uses "Emails ending in" (not "Emails") and that the Application Path is `studio`.
 
 8. After saving, go back to the application details:
    - Click **Configure** (top right)
@@ -192,26 +196,27 @@ Note what you see, then in a new Claude Code session:
 
 Check **Cloudflare Dashboard** → your domain's DNS zone:
 - **MX records** exist and point to Google Workspace (should show Google's MX addresses like `aspmx.l.google.com`)
-- **TXT records** contain your SPF (`v=spf1`) and any other verification records for Google Workspace
-- **Do NOT touch these** — they are live email, and breaking them means incoming mail fails
+- **TXT records** contain your SPF (`v=spf1`) and any other verification records for Google Workspace, including a nested SPF record at `dc-aa8e722993._spfm` — Google Workspace email delivery depends on it
+- **Do NOT touch these** — they are live email, and breaking or "cleaning up" any MX/TXT record (including the nested `_spfm` one) means incoming mail fails
 
 If you don't see MX/SPF records, ask your domain registrar or Cloudflare support before proceeding.
 
 ### Add Custom Domains to the Worker
 
+Use **Custom Domains**, not Routes — a Custom Domain is what makes Cloudflare create/replace the proxied DNS records and certificate for you automatically. Routes do not touch DNS at all (they only bind an existing domain pattern to a worker), so adding a Route here would leave your DNS unmigrated.
+
 1. Go to **Cloudflare Dashboard** → **Workers & Pages** → `qsite` worker
 2. Go to **Settings** → **Domains & Routes** (left sidebar)
-3. Click **Add route**
+3. Click **Add** → **Custom Domain**
 4. Add the first domain:
-   - **Route:** `qyouthnz.com/*`
-   - **Worker:** `qsite`
-   - Click **Save**
-5. Add the second domain:
-   - **Route:** `www.qyouthnz.com/*`
-   - **Worker:** `qsite`
-   - Click **Save**
+   - **Domain:** `qyouthnz.com` (plain hostname, no `/*` pattern)
+   - Click **Add Custom Domain**
+5. Repeat for the second domain:
+   - Click **Add** → **Custom Domain**
+   - **Domain:** `www.qyouthnz.com` (plain hostname, no `/*` pattern)
+   - Click **Add Custom Domain**
 
-**Expected result:** Cloudflare automatically converts your existing DNS records. You'll see:
+**Expected result:** Cloudflare automatically creates/replaces your DNS records to point at the worker. You'll see:
 - Apex `A` record → proxied Worker record (`75.2.60.5` IP changes to Cloudflare's proxy IPs)
 - `www` CNAME → proxied Worker record
 
@@ -254,7 +259,7 @@ Expected: `200 OK`.
 ```bash
 curl -sI https://qyouthnz.com/ | grep -i link
 ```
-Expected: Three lines starting with `Link: <...>; rel=preload` (CSS, icon SVG, font).
+Expected: One `Link:` header line containing three comma-separated preloads — `</styles.css>; rel=preload; as=style`, `</site-content.js>; rel=preload; as=script`, and `</site-data.json>; rel=preload; as=fetch; crossorigin` (matches `public/_headers`).
 
 ### Studio Access gate works
 1. Open a browser and go to `https://qyouthnz.com/studio/`
@@ -336,7 +341,7 @@ If you find it in wrangler.jsonc, remove it immediately and redeploy.
 
 ---
 
-## Next Steps After Cutover
+## Appendix: After You're Done
 
 - **Verify studio behavior** under load (a few test publishes)
 - **Monitor Cloudflare analytics** for a few days (Workers → `qsite` → Analytics)
