@@ -1,16 +1,8 @@
-import {
-  acceptInvite, getUser, handleAuthCallback, login, logout,
-} from "@netlify/identity";
-
 const $ = (id) => document.getElementById(id);
 let currentUser = null;
 
-export function rolesOf(user) {
-  return user?.appMetadata?.roles ?? user?.app_metadata?.roles ?? [];
-}
-
 export async function api(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch("/studio/api" + path, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
@@ -30,10 +22,9 @@ export function showToast(msg, isError = false) {
 function show(user) {
   currentUser = user;
   $("loading").hidden = true;
-  $("view-login").hidden = !!user;
   $("user-bar").hidden = !user;
   $("view-composer").hidden = !user;
-  const isAdmin = user && rolesOf(user).includes("admin");
+  const isAdmin = !!user && user.roles.includes("admin");
   $("view-admin").hidden = !isAdmin;
   if (user) {
     $("user-email").textContent = user.email;
@@ -60,13 +51,13 @@ async function publishManualPost(ev) {
     const file = $("post-image").files[0];
     if (file) {
       const data = await readImageAsBase64(file);
-      const up = await api("/api/images", {
+      const up = await api("/images", {
         method: "POST",
         body: JSON.stringify({ filename: file.name, data }),
       });
       imageName = up.filename;
     }
-    const { idea } = await api("/api/ideas", {
+    const { idea } = await api("/ideas", {
       method: "POST",
       body: JSON.stringify({
         source: "manual",
@@ -78,7 +69,7 @@ async function publishManualPost(ev) {
         linkLabel: $("post-link-label").value || null,
       }),
     });
-    await api(`/api/ideas/${idea.id}/publish`, {
+    await api(`/ideas/${idea.id}/publish`, {
       method: "POST",
       body: JSON.stringify({ date: $("post-date").value }),
     });
@@ -92,42 +83,16 @@ async function publishManualPost(ev) {
 }
 
 async function init() {
-  let inviteToken = null;
   try {
-    const result = await handleAuthCallback();
-    if (result?.type === "invite") inviteToken = result.token;
+    show(await api("/me"));
   } catch (e) {
-    showToast(e.message, true);
-  }
-
-  if (inviteToken) {
-    $("loading").hidden = true;
-    $("view-login").hidden = false;
-    $("login-form").hidden = true;
-    $("invite-form").hidden = false;
-    $("invite-form").addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      try {
-        const user = await acceptInvite(inviteToken, $("invite-password").value);
-        $("login-form").hidden = false;
-        $("invite-form").hidden = true;
-        show(user);
-      } catch (e) { showToast(e.message, true); }
-    });
+    $("loading").textContent = `Could not load your account — ${e.message}`;
     return;
   }
-
-  show(await getUser());
-
-  $("login-form").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    try {
-      show(await login($("login-email").value, $("login-password").value));
-    } catch (e) {
-      showToast(e.status === 401 ? "Wrong email or password." : e.message, true);
-    }
+  // Access owns the session; this ends it for every Access app, then lands back here
+  $("logout-btn").addEventListener("click", () => {
+    window.location.href = "/cdn-cgi/access/logout";
   });
-  $("logout-btn").addEventListener("click", async () => { await logout(); show(null); });
   $("composer-form").addEventListener("submit", publishManualPost);
 }
 
@@ -159,14 +124,14 @@ async function ideaActions(idea) {
 
   if (idea.status === "ready") {
     actions.push(act("Approve & publish", async () => {
-      await api(`/api/ideas/${idea.id}`, { method: "PATCH", body: JSON.stringify({ status: "approved" }) });
-      await api(`/api/ideas/${idea.id}/publish`, { method: "POST", body: JSON.stringify({}) });
+      await api(`/ideas/${idea.id}`, { method: "PATCH", body: JSON.stringify({ status: "approved" }) });
+      await api(`/ideas/${idea.id}/publish`, { method: "POST", body: JSON.stringify({}) });
       showToast("Published — the site will update in a minute or two.");
     }));
   }
   if (idea.status === "failed") {
     actions.push(act("Retry", () =>
-      api(`/api/ideas/${idea.id}`, { method: "PATCH", body: JSON.stringify({ status: "pending" }) })));
+      api(`/ideas/${idea.id}`, { method: "PATCH", body: JSON.stringify({ status: "pending" }) })));
   }
   return actions;
 }
@@ -184,7 +149,7 @@ async function ideaCard(idea) {
       if (!details.open || details.dataset.loaded) return;
       details.dataset.loaded = "1";
       try {
-        const { drafts } = await api(`/api/ideas/${idea.id}`);
+        const { drafts } = await api(`/ideas/${idea.id}`);
         const latest = drafts[0];
         if (!latest) { details.append(el("p", {}, "No draft yet.")); return; }
         const bodyBox = el("textarea", { rows: "12", style: "width:100%" });
@@ -199,7 +164,7 @@ async function ideaCard(idea) {
             ? el("button", { type: "button", onclick: async (ev) => {
                 ev.target.disabled = true;
                 try {
-                  await api(`/api/ideas/${idea.id}/drafts`, {
+                  await api(`/ideas/${idea.id}/drafts`, {
                     method: "POST",
                     body: JSON.stringify({ title: titleBox.value, body: bodyBox.value }),
                   });
@@ -231,7 +196,7 @@ window.renderAdmin = async function renderAdmin() {
   intake.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     try {
-      await api("/api/ideas", { method: "POST", body: JSON.stringify({
+      await api("/ideas", { method: "POST", body: JSON.stringify({
         source: "agent",
         title: $("idea-title").value,
         notes: $("idea-notes").value || null,
@@ -243,7 +208,7 @@ window.renderAdmin = async function renderAdmin() {
   root.append(intake, el("p", { id: "runner-status" }, "Runner: checking…"));
 
   try {
-    const { ideas, runnerLastSeen } = await api("/api/ideas");
+    const { ideas, runnerLastSeen } = await api("/ideas");
     const mins = runnerLastSeen ? Math.round((Date.now() - new Date(runnerLastSeen)) / 60000) : null;
     $("runner-status").textContent =
       mins === null ? "Runner: never seen — is your PC on?" :
