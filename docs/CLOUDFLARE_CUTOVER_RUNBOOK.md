@@ -109,16 +109,16 @@ Note what you see, then in a new Claude Code session:
    ```
    (Paste the GITHUB_TOKEN value from Step 2.)
 
-6. Test the deploy:
+6. Test the deploy. Use the **exact** `*.workers.dev` URL that `wrangler deploy` printed in substep 4 — Cloudflare assigns your account a subdomain with a random suffix (e.g. `manager-2fd`), not just your account name. A wrong hostname returns Cloudflare edge `error code: 1042`, which looks like a broken worker but just means "no worker at that name".
    ```bash
-   curl https://qsite.<your-account>.workers.dev/
+   curl https://qsite.<your-subdomain>.workers.dev/
    ```
    Expected: HTML homepage renders (200 status, no errors).
    
    ```bash
-   curl -I https://qsite.<your-account>.workers.dev/studio/api/me
+   curl -i https://qsite.<your-subdomain>.workers.dev/studio/api/me
    ```
-   Expected: `401 Unauthorized` — this proves the endpoint exists but is fail-closed (no auth yet, so it rejects).
+   Expected: `401 Unauthorized` with `content-type: application/json` — proves the endpoint exists but is fail-closed (no auth yet, so it rejects). **Use `-i` (GET), not `-I` (HEAD)** — the API routes are GET-only, so a HEAD request returns 404 instead.
 
 ---
 
