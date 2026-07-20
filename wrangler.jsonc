@@ -13,7 +13,7 @@
     "GITHUB_REPO": "pyrus117/qsite",
     "ADMIN_EMAILS": "nate@qyouthnz.com",
     // Set after the Access app exists (runbook step 4) — placeholder values fail closed
-    "CF_ACCESS_TEAM_DOMAIN": "https://qyouthnz.cloudflareaccess.com",
+    "CF_ACCESS_TEAM_DOMAIN": "https://qyouth.cloudflareaccess.com",
     "CF_ACCESS_AUD": "5e5b7448e8d10c3690454ab9c8e966363e61b315902577a70d071280f328edae"
   }
 }
