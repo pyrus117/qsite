@@ -218,7 +218,8 @@ def api(path, payload=None):
         cfg("STUDIO_URL").rstrip("/") + path,
         data=json.dumps(payload or {}).encode(),
         headers={"Authorization": f"Bearer {cfg('RUNNER_TOKEN')}",
-                 "Content-Type": "application/json"},
+                 "Content-Type": "application/json",
+                 "User-Agent": "QYouth-Runner/1.0"},  # default Python-urllib UA is blocked by Cloudflare (error 1010)
         method="POST")
     try:
         with urllib.request.urlopen(req, timeout=30) as res:
