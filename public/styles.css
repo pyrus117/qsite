@@ -1461,6 +1461,9 @@ img[data-attribution] { cursor: help; }
 }
 
 .blog-post-body h3 { font-size: 1.4rem; margin-bottom: 0.6rem; }
+.blog-post-body h3 a { color: inherit; text-decoration: none; }
+.blog-post-body h3 a:hover,
+.blog-post-body h3 a:focus-visible { text-decoration: underline; }
 .blog-post-body p  { color: var(--color-text-muted); margin-bottom: 0.9rem; }
 .blog-post-body .btn { margin-top: 0.25rem; }
 

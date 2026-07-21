@@ -1,4 +1,5 @@
 import { json } from "./_shared/http";
+import { handleBlogPage, handleFeed, handleSitemap } from "./blogPages";
 import drafts from "./api/drafts";
 import ideas from "./api/ideas";
 import images from "./api/images";
@@ -38,6 +39,23 @@ export default {
       const match = matchRoute(req.method, pathname);
       if (!match) return json({ error: "Not found" }, 404);
       return match.handler(req, match.params);
+    }
+    // SEO pages rendered from site-data.json; asset requests fall through
+    if (req.method === "GET" || req.method === "HEAD") {
+      try {
+        if (pathname === "/sitemap.xml") return await handleSitemap(req, env.ASSETS);
+        if (pathname === "/blog/feed.xml") return await handleFeed(req, env.ASSETS);
+        const post = /^\/blog\/([a-z0-9-]+)(\/?)$/.exec(pathname);
+        if (post) {
+          if (post[2]) {
+            return Response.redirect(new URL("/blog/" + post[1], req.url).href, 301);
+          }
+          return await handleBlogPage(req, env.ASSETS, post[1]);
+        }
+      } catch (err) {
+        console.error("blog page render failed:", err);
+        return new Response("Something went wrong.", { status: 500 });
+      }
     }
     return env.ASSETS.fetch(req);
   },

@@ -36,6 +36,14 @@ describe("mergePost", () => {
     expect(() => mergePost(fixture, { title: "", date: "2026-07-20", body: "x" })).toThrow();
     expect(() => mergePost(fixture, { title: "t", date: "20-07-2026", body: "x" })).toThrow(/date/i);
   });
+  it("throws when the title matches an existing post's slug (URL collision)", () => {
+    const once = mergePost(fixture, post);
+    expect(() => mergePost(once, { ...post, title: "TEST — post!", date: "2026-07-21" }))
+      .toThrow(/title/i);
+  });
+  it("throws when the title slugifies to nothing", () => {
+    expect(() => mergePost(fixture, { ...post, title: "🌈!!!" })).toThrow(/title/i);
+  });
   it("passes author through when provided", () => {
     const out = JSON.parse(mergePost(fixture, { ...post, author: "Nate" }));
     expect(out.blog[0].author).toBe("Nate");

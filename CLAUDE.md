@@ -8,13 +8,14 @@ LGBTQIA+/Takatāpui rangatahi support organisation, Nelson/Tasman, New Zealand.
 
 | Path | Purpose |
 |------|---------|
-| `public/` | **Everything deployed** — the 10 site .html files, `styles.css`, `icons.svg`, `site-data.json`, `site-content.js`, `image-attribution.js`, `robots.txt`, `sitemap.xml`, `images/`, `resources/` |
+| `public/` | **Everything deployed** — the 10 site .html files, `styles.css`, `icons.svg`, `site-data.json`, `site-content.js`, `image-attribution.js`, `robots.txt`, `images/`, `resources/` (no static sitemap — the worker generates it) |
 | `public/index.html` | Homepage (hero, CTA banner, stats, sponsors banner, programmes, about, events, newsletter, contact) |
 | `public/blog.html` | Blog — posts rendered from site-data.json `blog` array, newest first |
 | `public/site-data.json` | Sponsors, directory, resources, blog posts — rendered at runtime by `site-content.js` |
 | `public/studio/` | Blog Studio SPA (`index.html`, `studio.css`; `studio.js` is a gitignored esbuild artefact) |
 | `studio-src/studio.js` | Studio SPA source — bundled by `npm run build` |
 | `worker/index.ts` | Worker entry — route table + `matchRoute`; studio API is `/studio/api/*` (behind Cloudflare Access), runner API stays `/api/runner/*` (bearer `RUNNER_TOKEN`, outside Access) |
+| `worker/blogPages.ts` | SEO pages served by the worker: `/blog/<slug>` (server-rendered post pages from site-data.json + blog.html as template), `/sitemap.xml`, `/blog/feed.xml` (RSS). Slugs derive from titles — `slugify` here must stay identical to `_slugify` in `site-content.js` |
 | `worker/api/` | Endpoints: `ideas.ts`, `drafts.ts`, `runner.ts`, `publish.ts`, `images.ts`, `me.ts` |
 | `worker/_shared/` | Helpers: `auth.ts`, `http.ts`, `github.ts`, `blogMerge.ts`, `imageUpload.ts`, `transitions.ts` |
 | `db/migrations/` | Drizzle migrations — applied manually with `npm run db:migrate` |
@@ -145,6 +146,7 @@ npm test
 - Resource videos store the full `<iframe>` embed code in the item's `url`; `renderResources` strips its width/height and wraps it in a responsive 16:9 `.resource-embed`
 - Image credits live in a `data-attribution="..."` attribute on the `<img>`; `image-attribution.js` shows them as a hover tooltip and must be included (`<script src="image-attribution.js" defer></script>`) on any new page that has images
 - Canonical/og/schema/sitemap URLs use the **apex domain** (`https://qyouthnz.com`) — the live server 301s www→apex, so never reintroduce `www.` in metadata
+- **SEO (2026-07-21):** every page has a full OG set + `og:image` (`images/og-default.jpg`, 1200×630, regenerate with ImageMagick) + `twitter:card`; blog posts get real URLs at `/blog/<slug>` server-rendered by `worker/blogPages.ts` (post pages carry BlogPosting JSON-LD, per-post canonical/OG, and a `<base href="/">` because they live one path level down); sitemap + RSS are worker-generated from site-data.json, so publishing a post updates both automatically. **Renaming a post's title changes its URL** (slug = slugified title) — avoid retitling published posts
 - The homepage **CTA banner** (`.cta-banner`, between hero and stats bar) links to blog.html; its heading/text are `data-editable` (`cta-banner-title`/`cta-banner-text`). Post topical issues as blog posts. Banner gradient starts at `#DB2777` (not `--color-secondary`) for WCAG AA contrast with white text
 - Never let saved pages contain base64 `data:image` URIs — they bloated three pages by up to 279KB each (fixed 2026-07-16 by extracting to `images/*.webp`). If an `<img src>` shows `data:image/...` after an editor save, extract it to a file
 - Sponsor entries in site-data.json carry `width`/`height` (real pixel dims) that `site-content.js` puts on the marquee `<img>` for Lighthouse's unsized-images audit; new sponsor logos get dims added manually or via `magick identify`

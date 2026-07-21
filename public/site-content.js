@@ -30,6 +30,16 @@
       console.error('[Q Youth] Could not load site-data.json:', e.message);
     });
 
+  // Keep in sync with slugify in worker/blogPages.ts — post URLs depend on it
+  function _slugify(title) {
+    return String(title)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/['’]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
   // Safely encode a filename so spaces/special chars work in img.src URLs
   function _imgPath(folder, filename) {
     if (!filename) return '';
@@ -322,7 +332,10 @@
         }
 
         var h3 = document.createElement('h3');
-        h3.textContent = post.title;
+        var titleLink = document.createElement('a');
+        titleLink.href = '/blog/' + _slugify(post.title);
+        titleLink.textContent = post.title;
+        h3.appendChild(titleLink);
         body.appendChild(h3);
 
         // Blank lines in the body become paragraph breaks
