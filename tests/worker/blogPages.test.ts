@@ -115,8 +115,10 @@ describe("renderSitemap", () => {
 
   it("lists the static pages", () => {
     expect(xml).toContain("<loc>https://qyouthnz.com/</loc>");
-    expect(xml).toContain("<loc>https://qyouthnz.com/blog.html</loc>");
-    expect(xml).toContain("<loc>https://qyouthnz.com/privacy-policy.html</loc>");
+    expect(xml).toContain("<loc>https://qyouthnz.com/blog</loc>");
+    expect(xml).toContain("<loc>https://qyouthnz.com/privacy-policy</loc>");
+    // Cloudflare 307s .html to extensionless — the sitemap must list the final URLs
+    expect(xml).not.toContain(".html</loc>");
   });
   it("lists each post with its date as lastmod", () => {
     expect(xml).toContain(
@@ -140,6 +142,7 @@ describe("renderFeed", () => {
   it("is an RSS 2.0 feed for the blog", () => {
     expect(xml).toContain('<rss version="2.0"');
     expect(xml).toContain("<title>Q Youth NZ Blog</title>");
+    expect(xml).toContain("<link>https://qyouthnz.com/blog</link>");
   });
   it("links each item to its post URL", () => {
     expect(xml).toContain("<link>https://qyouthnz.com/blog/fish-chips</link>");
@@ -231,6 +234,17 @@ describe("hardening (adversarial review fixes)", () => {
     const html = renderPostPage(template, post);
     expect(html).not.toContain('href="site-data.json"');
     expect(html).not.toContain('src="site-content.js"');
+  });
+});
+
+describe("Search Console verification file", () => {
+  const env = { ASSETS: { fetch: async () => new Response("unused") } };
+  it("serves the exact .html path without the asset-layer 307", async () => {
+    const res = await worker.fetch(
+      new Request("https://qyouthnz.com/googlef0a7e85871371696.html"), env as never,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("google-site-verification: googlef0a7e85871371696.html");
   });
 });
 

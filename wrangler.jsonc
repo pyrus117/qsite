@@ -7,7 +7,7 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*", "/studio/api/*"]
+    "run_worker_first": ["/api/*", "/studio/api/*", "/googlef0a7e85871371696.html"]
   },
   "vars": {
     "GITHUB_REPO": "pyrus117/qsite",

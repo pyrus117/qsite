@@ -10,10 +10,11 @@ export interface BlogPost {
 
 const ORIGIN = "https://qyouthnz.com";
 const DEFAULT_OG_IMAGE = ORIGIN + "/images/og-default.jpg";
+// extensionless — the asset layer 307s *.html to these, so list the final URLs
 const STATIC_PAGES = [
-  "", "drop-ins.html", "young-adults.html", "events.html", "education.html",
-  "local-directory.html", "get-involved.html", "resources.html", "blog.html",
-  "privacy-policy.html",
+  "", "drop-ins", "young-adults", "events", "education",
+  "local-directory", "get-involved", "resources", "blog",
+  "privacy-policy",
 ];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June", "July",
@@ -200,7 +201,7 @@ export function renderFeed(posts: BlogPost[]): string {
     + '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
     + "  <channel>\n"
     + "    <title>Q Youth NZ Blog</title>\n"
-    + `    <link>${ORIGIN}/blog.html</link>\n`
+    + `    <link>${ORIGIN}/blog</link>\n`
     + '    <description>News, kōrero, and topical issues from Q Youth NZ.</description>\n'
     + "    <language>en-nz</language>\n"
     + `    <atom:link href="${ORIGIN}/blog/feed.xml" rel="self" type="application/rss+xml"/>\n`
