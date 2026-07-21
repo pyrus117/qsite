@@ -237,17 +237,6 @@ describe("hardening (adversarial review fixes)", () => {
   });
 });
 
-describe("Search Console verification file", () => {
-  const env = { ASSETS: { fetch: async () => new Response("unused") } };
-  it("serves the exact .html path without the asset-layer 307", async () => {
-    const res = await worker.fetch(
-      new Request("https://qyouthnz.com/googlef0a7e85871371696.html"), env as never,
-    );
-    expect(res.status).toBe(200);
-    expect(await res.text()).toBe("google-site-verification: googlef0a7e85871371696.html");
-  });
-});
-
 describe("trailing-slash redirect", () => {
   const env = {
     ASSETS: { fetch: async () => new Response("unused") },

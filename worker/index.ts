@@ -42,13 +42,6 @@ export default {
     }
     // SEO pages rendered from site-data.json; asset requests fall through
     if (req.method === "GET" || req.method === "HEAD") {
-      // Google fetches the exact .html URL and won't follow the asset layer's
-      // 307 to the extensionless form — needs run_worker_first in wrangler.jsonc
-      if (pathname === "/googlef0a7e85871371696.html") {
-        return new Response("google-site-verification: googlef0a7e85871371696.html", {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        });
-      }
       try {
         if (pathname === "/sitemap.xml") return await handleSitemap(req, env.ASSETS);
         if (pathname === "/blog/feed.xml") return await handleFeed(req, env.ASSETS);
