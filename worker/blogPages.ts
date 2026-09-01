@@ -97,21 +97,35 @@ function jsonLd(post: BlogPost, desc: string, image: string): string {
     headline: post.title,
     description: desc,
     datePublished: post.date,
+    dateModified: post.date,
+    inLanguage: "en-NZ",
     url: postUrl(post),
     mainEntityOfPage: postUrl(post),
     image,
+    isPartOf: { "@type": "Blog", "@id": ORIGIN + "/blog", name: "Q Youth NZ Blog" },
     author: post.author
       ? { "@type": "Person", name: post.author }
-      : { "@type": "Organization", name: "Q Youth NZ" },
+      : { "@id": ORIGIN + "/#organisation", "@type": "Organization", name: "Q Youth NZ" },
     publisher: {
+      "@id": ORIGIN + "/#organisation",
       "@type": "Organization",
       name: "Q Youth NZ",
       logo: { "@type": "ImageObject", url: ORIGIN + "/images/logo.png" },
     },
   };
+  const crumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: ORIGIN + "/" },
+      { "@type": "ListItem", position: 2, name: "Blog", item: ORIGIN + "/blog" },
+      { "@type": "ListItem", position: 3, name: post.title, item: postUrl(post) },
+    ],
+  };
   // < stops a title containing </script> from closing the tag early
-  const json = JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
-  return `<script type="application/ld+json">\n${json}\n</script>`;
+  const enc = (d: unknown) => JSON.stringify(d, null, 2).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json">\n${enc(data)}\n</script>\n`
+    + `<script type="application/ld+json">\n${enc(crumbs)}\n</script>`;
 }
 
 export function renderPostPage(template: string, post: BlogPost): string {
@@ -140,7 +154,19 @@ export function renderPostPage(template: string, post: BlogPost): string {
       () => `<link href="${url}" rel="canonical"/>`)
     .replace(/<meta [^>]*property="og:image"[^>]*>/,
       () => `<meta content="${ogImage}" property="og:image"/>`)
+    // twitter:image must track og:image, or a post with its own picture
+    // still shares the site-wide default card
+    .replace(/<meta [^>]*name="twitter:image"[^>]*>/,
+      () => `<meta content="${ogImage}" name="twitter:image"/>`)
     .replace(/\s*<meta [^>]*property="og:image:(?:width|height)"[^>]*>/g, "")
+    // only when the post supplies its own picture; otherwise the template's
+    // description of the default card image is still the correct one
+    .replace(/<meta [^>]*property="og:image:alt"[^>]*>/,
+      (m) => post.image && post.imageAlt
+        ? `<meta content="${esc(post.imageAlt)}" property="og:image:alt"/>` : m)
+    .replace(/<meta [^>]*name="twitter:image:alt"[^>]*>/,
+      (m) => post.image && post.imageAlt
+        ? `<meta content="${esc(post.imageAlt)}" name="twitter:image:alt"/>` : m)
     .replace(/<meta [^>]*property="og:locale"[^>]*>/,
       (m) => m + `\n<meta content="${esc(post.date)}" property="article:published_time"/>`)
     .replace(/<meta charset="utf-8"[^>]*>/,

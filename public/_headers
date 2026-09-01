@@ -1,6 +1,25 @@
 /studio/*
   X-Robots-Tag: noindex, nofollow
 
+# Media is served from stable filenames. One day of browser cache, then a week
+# of stale-while-revalidate, so a repeat visitor pays no round trip for images.
+# Kept short on purpose: the editor can replace an image under the same name.
+/images/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/resources/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/icons.svg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/favicon.ico
+  Cache-Control: public, max-age=604800
+
+# styles.css, site-content.js and site-data.json stay on revalidation.
+# They are unversioned, so a long cache would hide a deploy from returning
+# visitors — and site-data.json carries every newly published blog post.
+
 /*
   Link: </styles.css>; rel=preload; as=style
 

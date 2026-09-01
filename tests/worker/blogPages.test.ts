@@ -98,6 +98,18 @@ describe("renderPostPage", () => {
     expect(withImg).toContain('src="images/my%20pic.webp"');
     expect(withImg).toContain('alt="A pic"');
   });
+  it("points the twitter card at the post image and its alt text", () => {
+    const withImg = renderPostPage(template, {
+      ...post, image: "my pic.webp", imageAlt: "A pic",
+    });
+    expect(withImg).toContain('content="https://qyouthnz.com/images/my%20pic.webp" name="twitter:image"');
+    expect(withImg).toContain('content="A pic" name="twitter:image:alt"');
+    expect(withImg).toContain('content="A pic" property="og:image:alt"');
+  });
+  it("keeps the default card image and alt when a post has no image", () => {
+    expect(html).toContain('content="https://qyouthnz.com/images/og-default.jpg" name="twitter:image"');
+    expect(html).toContain("Q Youth NZ — support and community");
+  });
   it("escapes HTML in post fields", () => {
     const evil = renderPostPage(template, {
       ...post,
@@ -227,8 +239,13 @@ describe("hardening (adversarial review fixes)", () => {
   });
   it("strips the template Blog JSON-LD so only BlogPosting remains", () => {
     const html = renderPostPage(template, post);
-    expect(html).not.toMatch(/"@type": "Blog"[^P]/);
-    expect(html).toContain('"@type": "BlogPosting"');
+    const blocks = [...html.matchAll(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+    )].map((m) => JSON.parse(m[1]));
+    // a nested "@type": "Blog" is the post's isPartOf link and must survive;
+    // it is a standalone Blog block that would duplicate the listing page
+    expect(blocks.map((b) => b["@type"])).toEqual(["BlogPosting", "BreadcrumbList"]);
+    expect(blocks[0].isPartOf["@type"]).toBe("Blog");
   });
   it("drops the site-data preload and site-content script from post pages", () => {
     const html = renderPostPage(template, post);
