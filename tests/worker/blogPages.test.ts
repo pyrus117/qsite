@@ -195,6 +195,30 @@ describe("worker fetch routing for blog pages", () => {
     const res = await get("/blog/not-a-post");
     expect(res.status).toBe(404);
   });
+  it("serves the real 404 page for an unknown slug when it is available", async () => {
+    const withPage = {
+      ASSETS: {
+        fetch: async (req: Request) => {
+          const { pathname } = new URL(req.url);
+          if (pathname === "/site-data.json") return new Response(siteData);
+          if (pathname === "/404.html") return new Response("<h1>This page isn't here</h1>");
+          return new Response("not found", { status: 404 });
+        },
+      },
+    };
+    const res = await worker.fetch(
+      new Request("https://qyouthnz.com/blog/not-a-post"), withPage as never,
+    );
+    expect(res.status).toBe(404);
+    expect(await res.text()).toContain("This page isn't here");
+  });
+  it("falls back to inline HTML when 404.html cannot be fetched", async () => {
+    // the mock env above answers 404 for /404.html, so this exercises the fallback
+    const res = await get("/blog/not-a-post");
+    const body = await res.text();
+    expect(body).toContain("noindex");
+    expect(body).toContain('href="/"');
+  });
   it("serves the generated sitemap", async () => {
     const res = await get("/sitemap.xml");
     expect(res.status).toBe(200);

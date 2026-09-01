@@ -253,19 +253,32 @@ function xmlResponse(body: string, contentType: string): Response {
   });
 }
 
+// /blog/* runs the worker first, so the asset layer's not_found_handling never
+// sees a bad slug — serve the same 404 page here rather than a bare fallback
+async function notFound(assets: Assets, origin: string): Promise<Response> {
+  const headers = { "Content-Type": "text/html; charset=utf-8" };
+  try {
+    const res = await assets.fetch(new Request(origin + "/404.html"));
+    if (res.ok) return new Response(await res.text(), { status: 404, headers });
+    console.error("404.html fetch failed:", res.status);
+  } catch (err) {
+    console.error("404.html fetch threw:", err);
+  }
+  return new Response(
+    '<!DOCTYPE html><html lang="en-NZ"><head><meta charset="utf-8">'
+    + '<title>Page not found | Q Youth NZ</title><meta name="robots" content="noindex"></head>'
+    + '<body><p>That page isn\'t here — <a href="/">back to the home page</a>.</p></body></html>',
+    { status: 404, headers },
+  );
+}
+
 export async function handleBlogPage(
   req: Request, assets: Assets, slug: string,
 ): Promise<Response> {
   const { origin } = new URL(req.url);
   const posts = await loadPosts(assets, origin);
   const post = findPost(posts, slug);
-  if (!post) {
-    return new Response(
-      '<!DOCTYPE html><html lang="en-NZ"><head><meta charset="utf-8"><title>Post not found | Q Youth NZ</title><meta name="robots" content="noindex"></head>'
-      + '<body><p>That post doesn\'t exist — <a href="/blog.html">back to the blog</a>.</p></body></html>',
-      { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    );
-  }
+  if (!post) return await notFound(assets, origin);
   const tplRes = await assets.fetch(new Request(origin + "/blog.html"));
   if (!tplRes.ok) throw new Error("blog.html fetch failed: " + tplRes.status);
   const html = renderPostPage(await tplRes.text(), post);
