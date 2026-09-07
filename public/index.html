@@ -398,10 +398,16 @@
 <span class="section-label" style="background:rgba(255,255,255,0.2);color:#fff;">Stay Connected</span>
 <h2 id="newsletter-heading">Join our newsletter</h2>
 <p>Get updates on events, resources, and what's happening at Q Youth delivered to your inbox.</p>
-<form aria-label="Newsletter signup" class="newsletter-form" onsubmit="return false;" style="max-width:460px;margin:0 auto">
+<form action="https://api.web3forms.com/submit" aria-label="Newsletter signup" class="newsletter-form" method="POST" style="max-width:460px;margin:0 auto">
+<input type="hidden" name="access_key" value="65635a13-a2bd-4082-9e05-0ccc2bc0ca12">
+<input type="hidden" name="subject" value="New newsletter signup from the Q Youth website">
+<input type="hidden" name="from_name" value="Q Youth NZ Website">
+<input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
 <label class="visually-hidden" for="newsletter-email">Email address for newsletter</label>
-<input autocomplete="email" id="newsletter-email" name="email" placeholder="Your email address" type="email">
+<input autocomplete="email" id="newsletter-email" name="email" placeholder="Your email address" type="email" required>
 <button class="btn btn-primary" type="submit">Subscribe</button>
+<p class="newsletter-status" role="status" aria-live="polite"></p>
+<p class="newsletter-note">We use your email address only to send you our newsletter. You can unsubscribe at any time. See our <a href="privacy-policy.html">Privacy Policy</a>.</p>
 </form>
 </div>
 </section>
@@ -576,5 +582,6 @@
       });
     })();
   </script>
+<script src="newsletter.js" defer=""></script>
 <script src="image-attribution.js" defer=""></script>
 <div class="img-attrib-tip" role="tooltip" style="left: 347.5px; top: 595px;">Members of our crew painting a mural at our old location</div><div class="img-attrib-tip" role="tooltip" style="left: 915.5px; top: 331.7px;">Kai (they/them/he/him) a member of our community</div></body></html>

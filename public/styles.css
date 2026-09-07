@@ -722,6 +722,28 @@ p  { color: var(--color-text-muted); }
 .newsletter-form input::placeholder { color: rgba(255,255,255,0.6); }
 .newsletter-form input:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); }
 
+/* Status and consent note sit on their own row below the input + button. */
+.newsletter-form .newsletter-status,
+.newsletter-form .newsletter-note {
+  flex: 1 0 100%;
+  margin: 0.75rem 0 0;
+  text-align: center;
+}
+
+.newsletter-form .newsletter-status {
+  display: none;
+  color: var(--color-white);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.newsletter-form .newsletter-note {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.8rem;
+}
+
+.newsletter-form .newsletter-note a { color: var(--color-white); text-decoration: underline; }
+
 /* =========================================
    FOOTER
    ========================================= */
