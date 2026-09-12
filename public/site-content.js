@@ -1,5 +1,5 @@
 // =============================================================================
-//  Q YOUTH NZ — SITE CONTENT
+//  Q-YOUTH NZ — SITE CONTENT
 //  Data now lives in  site-data.json  — use the editor app (editor.py) or
 //  edit that JSON file directly.  This file only contains rendering code.
 // =============================================================================
@@ -27,7 +27,7 @@
       _callbacks = [];
     })
     .catch(function (e) {
-      console.error('[Q Youth] Could not load site-data.json:', e.message);
+      console.error('[Q-Youth] Could not load site-data.json:', e.message);
     });
 
   // Keep in sync with slugify in worker/blogPages.ts — post URLs depend on it

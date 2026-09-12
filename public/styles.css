@@ -1,5 +1,5 @@
 /* =========================================
-   Q Youth NZ — Design System & Global Styles
+   Q-Youth NZ — Design System & Global Styles
    ========================================= */
 
 /* Fonts loaded via <link> in each page head — @import here blocked first paint */
@@ -767,10 +767,12 @@ p  { color: var(--color-text-muted); }
   .footer-grid { grid-template-columns: 1fr; }
 }
 
-.footer-brand .nav-logo {
-  font-size: 1.4rem;
-  display: inline-block;
-  margin-bottom: 0.75rem;
+.footer-mascot {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1rem;
 }
 
 .footer-brand p {
@@ -1530,6 +1532,12 @@ img[data-attribution] { cursor: help; }
   font-weight: 800;
   display: block;
   font-size: 1.05rem;
+}
+
+.cta-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .cta-banner .btn {

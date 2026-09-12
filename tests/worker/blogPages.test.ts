@@ -48,7 +48,7 @@ describe("renderPostPage", () => {
   const slugUrl = "https://qyouthnz.com/blog/" + slugify(post.title);
 
   it("puts the post title in <title>", () => {
-    expect(html).toMatch(/<title>250-plus schools chose aroha out loud this Pride Week — Q Youth NZ<\/title>/);
+    expect(html).toMatch(/<title>250-plus schools chose aroha out loud this Pride Week — Q-Youth NZ<\/title>/);
   });
   it("sets canonical and og:url to the post URL", () => {
     expect(html).toContain(`href="${slugUrl}" rel="canonical"`);
@@ -88,7 +88,7 @@ describe("renderPostPage", () => {
     expect(html).toContain('"datePublished": "2026-07-16"');
   });
   it("uses the default og:image when the post has none", () => {
-    expect(html).toContain('content="https://qyouthnz.com/images/og-default.jpg" property="og:image"');
+    expect(html).toContain('content="https://qyouthnz.com/images/og-default.jpg?v=20260912" property="og:image"');
   });
   it("uses the post image for og:image and renders the figure", () => {
     const withImg = renderPostPage(template, {
@@ -107,8 +107,8 @@ describe("renderPostPage", () => {
     expect(withImg).toContain('content="A pic" property="og:image:alt"');
   });
   it("keeps the default card image and alt when a post has no image", () => {
-    expect(html).toContain('content="https://qyouthnz.com/images/og-default.jpg" name="twitter:image"');
-    expect(html).toContain("Q Youth NZ — support and community");
+    expect(html).toContain('content="https://qyouthnz.com/images/og-default.jpg?v=20260912" name="twitter:image"');
+    expect(html).toContain("Q-Youth NZ — support and community");
   });
   it("escapes HTML in post fields", () => {
     const evil = renderPostPage(template, {
@@ -153,7 +153,7 @@ describe("renderFeed", () => {
 
   it("is an RSS 2.0 feed for the blog", () => {
     expect(xml).toContain('<rss version="2.0"');
-    expect(xml).toContain("<title>Q Youth NZ Blog</title>");
+    expect(xml).toContain("<title>Q-Youth NZ Blog</title>");
     expect(xml).toContain("<link>https://qyouthnz.com/blog</link>");
   });
   it("links each item to its post URL", () => {
@@ -258,7 +258,7 @@ describe("hardening (adversarial review fixes)", () => {
         '<meta property="og:title" content="$1">');
     const html = renderPostPage(reordered, post);
     expect(html).toContain("First paragraph");
-    expect(html).not.toContain("News, kōrero, and topical issues from Q Youth NZ —");
+    expect(html).not.toContain("News, kōrero, and topical issues from Q-Youth NZ —");
     expect(html).toContain(`content="${post.title}" property="og:title"`);
   });
   it("strips the template Blog JSON-LD so only BlogPosting remains", () => {

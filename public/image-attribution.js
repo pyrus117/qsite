@@ -1,5 +1,5 @@
 /**
- * Q Youth NZ — Image Attribution
+ * Q-Youth NZ — Image Attribution
  * Shows a small credit tooltip when hovering an image that has a
  * data-attribution="..." attribute. Self-contained: include on any page with
  *   <script src="image-attribution.js" defer></script>

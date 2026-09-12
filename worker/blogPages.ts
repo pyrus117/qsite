@@ -9,7 +9,7 @@ export interface BlogPost {
 }
 
 const ORIGIN = "https://qyouthnz.com";
-const DEFAULT_OG_IMAGE = ORIGIN + "/images/og-default.jpg";
+const DEFAULT_OG_IMAGE = ORIGIN + "/images/og-default.jpg?v=20260912";
 // extensionless — the asset layer 307s *.html to these, so list the final URLs
 const STATIC_PAGES = [
   "", "drop-ins", "young-adults", "events", "education",
@@ -102,15 +102,15 @@ function jsonLd(post: BlogPost, desc: string, image: string): string {
     url: postUrl(post),
     mainEntityOfPage: postUrl(post),
     image,
-    isPartOf: { "@type": "Blog", "@id": ORIGIN + "/blog", name: "Q Youth NZ Blog" },
+    isPartOf: { "@type": "Blog", "@id": ORIGIN + "/blog", name: "Q-Youth NZ Blog" },
     author: post.author
       ? { "@type": "Person", name: post.author }
-      : { "@id": ORIGIN + "/#organisation", "@type": "Organization", name: "Q Youth NZ" },
+      : { "@id": ORIGIN + "/#organisation", "@type": "Organization", name: "Q-Youth NZ" },
     publisher: {
       "@id": ORIGIN + "/#organisation",
       "@type": "Organization",
-      name: "Q Youth NZ",
-      logo: { "@type": "ImageObject", url: ORIGIN + "/images/logo.png" },
+      name: "Q-Youth NZ",
+      logo: { "@type": "ImageObject", url: ORIGIN + "/images/logo.png?v=20260912" },
     },
   };
   const crumbs = {
@@ -139,7 +139,7 @@ export function renderPostPage(template: string, post: BlogPost): string {
   // Attribute-order-independent matches (editor.py/bs4 re-saves reorder them)
   // and function-form replacements ($& in post content must stay literal).
   const html = template
-    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(post.title)} — Q Youth NZ</title>`)
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(post.title)} — Q-Youth NZ</title>`)
     .replace(/<meta [^>]*name="description"[^>]*>/,
       () => `<meta content="${esc(desc)}" name="description"/>`)
     .replace(/<meta [^>]*property="og:title"[^>]*>/,
@@ -226,9 +226,9 @@ export function renderFeed(posts: BlogPost[]): string {
   return '<?xml version="1.0" encoding="UTF-8"?>\n'
     + '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
     + "  <channel>\n"
-    + "    <title>Q Youth NZ Blog</title>\n"
+    + "    <title>Q-Youth NZ Blog</title>\n"
     + `    <link>${ORIGIN}/blog</link>\n`
-    + '    <description>News, kōrero, and topical issues from Q Youth NZ.</description>\n'
+    + '    <description>News, kōrero, and topical issues from Q-Youth NZ.</description>\n'
     + "    <language>en-nz</language>\n"
     + `    <atom:link href="${ORIGIN}/blog/feed.xml" rel="self" type="application/rss+xml"/>\n`
     + items.join("\n") + "\n"
@@ -266,7 +266,7 @@ async function notFound(assets: Assets, origin: string): Promise<Response> {
   }
   return new Response(
     '<!DOCTYPE html><html lang="en-NZ"><head><meta charset="utf-8">'
-    + '<title>Page not found | Q Youth NZ</title><meta name="robots" content="noindex"></head>'
+    + '<title>Page not found | Q-Youth NZ</title><meta name="robots" content="noindex"></head>'
     + '<body><p>That page isn\'t here — <a href="/">back to the home page</a>.</p></body></html>',
     { status: 404, headers },
   );

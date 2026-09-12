@@ -1,5 +1,5 @@
 /**
- * Q Youth NZ — Newsletter signup
+ * Q-Youth NZ — Newsletter signup
  * Posts every .newsletter-form to Web3Forms without a page reload, then shows
  * the result in the form's .newsletter-status paragraph. Self-contained:
  *   <script src="newsletter.js" defer></script>
