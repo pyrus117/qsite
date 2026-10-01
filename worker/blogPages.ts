@@ -70,14 +70,6 @@ function postUrl(post: BlogPost): string {
 
 function articleHtml(post: BlogPost): string {
   const parts: string[] = ['<article class="blog-post">'];
-  if (post.image) {
-    const src = "images/" + encodeURIComponent(post.image);
-    const credit = post.imageCredit
-      ? ` data-attribution="${esc(post.imageCredit)}"` : "";
-    parts.push(
-      `<div class="blog-post-img"><img src="${src}" alt="${esc(post.imageAlt || "")}"${credit}></div>`,
-    );
-  }
   parts.push('<div class="blog-post-body">');
   parts.push(
     `<time class="blog-post-date" datetime="${esc(post.date)}">${esc(displayDate(post.date))}</time>`,
@@ -86,6 +78,15 @@ function articleHtml(post: BlogPost): string {
     parts.push(`<span class="blog-post-author">by ${esc(post.author)}</span>`);
   }
   for (const p of paragraphs(post.body)) parts.push(`<p>${esc(p)}</p>`);
+  // Full-width image sits directly below the body text, uncropped
+  if (post.image) {
+    const src = "images/" + encodeURIComponent(post.image);
+    const credit = post.imageCredit
+      ? ` data-attribution="${esc(post.imageCredit)}"` : "";
+    parts.push(
+      `<div class="blog-post-img"><img src="${src}" alt="${esc(post.imageAlt || "")}"${credit}></div>`,
+    );
+  }
   parts.push("</div></article>");
   return parts.join("\n");
 }

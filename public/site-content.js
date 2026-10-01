@@ -293,22 +293,6 @@
         var article = document.createElement('article');
         article.className = 'blog-post';
 
-        if (post.image) {
-          var figure = document.createElement('div');
-          figure.className = 'blog-post-img';
-          var img = document.createElement('img');
-          img.src     = _imgPath('images/', post.image);
-          img.alt     = post.imageAlt || '';
-          img.loading = 'lazy';
-          // image-attribution.js reads data-attribution for hover tooltip
-          if (post.imageCredit) img.setAttribute('data-attribution', post.imageCredit);
-          img.onerror = function () {
-            if (article.contains(figure)) article.removeChild(figure);
-          };
-          figure.appendChild(img);
-          article.appendChild(figure);
-        }
-
         var body = document.createElement('div');
         body.className = 'blog-post-body';
 
@@ -345,6 +329,23 @@
           p.textContent = para.trim();
           body.appendChild(p);
         });
+
+        // Full-width image sits directly below the body text, uncropped
+        if (post.image) {
+          var figure = document.createElement('div');
+          figure.className = 'blog-post-img';
+          var img = document.createElement('img');
+          img.src     = _imgPath('images/', post.image);
+          img.alt     = post.imageAlt || '';
+          img.loading = 'lazy';
+          // image-attribution.js reads data-attribution for hover tooltip
+          if (post.imageCredit) img.setAttribute('data-attribution', post.imageCredit);
+          img.onerror = function () {
+            if (figure.parentNode) figure.parentNode.removeChild(figure);
+          };
+          figure.appendChild(img);
+          body.appendChild(figure);
+        }
 
         if (post.link) {
           var a = document.createElement('a');
