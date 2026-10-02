@@ -136,6 +136,12 @@
           "description": "A glossary of transgender and gender-diverse terminology",
           "type": "pdf",
           "url": "resources/A Trans Dictionary.pdf.pdf"
+        },
+        {
+          "title": "GiveOUT Day FAQ",
+          "description": "GiveOUT Day 2026 FAQ covering matched funding, eligible donations, and Q-Youth's campaign",
+          "type": "pdf",
+          "url": "resources/GiveOUT Day FAQ.pdf"
         }
       ]
     },
